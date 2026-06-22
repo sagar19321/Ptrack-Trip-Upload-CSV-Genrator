@@ -1036,7 +1036,7 @@ function parsePaste(){
   return result;
 }
 
-function calcForTiming(tv, ds){
+function calcForTiming(tv, ds, opts){
   if(!tv||tv.length<4||!ds) return null;
   const th=parseInt(tv.slice(0,2)),tm=parseInt(tv.slice(2,4));
   if(isNaN(th)||isNaN(tm)) return null;
@@ -1053,6 +1053,12 @@ function calcForTiming(tv, ds){
     return{pickup:fmtDT(dp,ph,pm),delivery:fmtDT(d,th,tm),shift,ll,tv};
   }else{
     // DROP: Pickup = timing, Delivery = timing + 1:30 hr
+    // SPECIAL (Gallagher Summary upload ONLY, not used anywhere else): 2345 → Pickup 00:01 / Delivery 01:30, next day
+    if(opts&&opts.gallagherSummary&&th===23&&tm===45){
+      const dn=new Date(d.getTime()+86400000);
+      const ll=2;
+      return{pickup:fmtDT(dn,0,1),delivery:fmtDT(dn,1,30),shift,ll,tv:'0000'};
+    }
     // SPECIAL: 2230 → Delivery 23:30 (same day); 2300 → Delivery 23:45 (same day); 2330 → Delivery 23:45 (same day)
     let dh,dm,dn;
     if(th===22&&tm===30){dh=23;dm=30;dn=d;}
@@ -1095,9 +1101,22 @@ function handleExcelUpload(file){
       let headerRow=-1;
       let isNBH=false;
       let isTIAA=false;
+      let isGallagherSummary=false;
       let cols={tIdx:-1,timeIdx:-1,locIdx:-1,descIdx:-1,countIdx:-1,flapIdx:-1,guardIdx:-1,shiftIdx:-1,paxIdx:-1};
       for(let i=0;i<Math.min(5,raw.length);i++){
         const r=(raw[i]||[]).map(v=>String(v||'').toLowerCase().trim());
+        // Gallagher Summary format detection: 'shift timing' + 'location' + 'emp count'
+        // (this is the re-uploaded output of the Gallagher tab's own Export — TOTAL SHIFT rows are skipped below)
+        const galShiftI=r.findIndex(c=>c==='shift timing');
+        const galLocI  =r.findIndex(c=>c==='location');
+        const galRouteI=r.findIndex(c=>c==='route no');
+        const galEmpI  =r.findIndex(c=>c==='emp count');
+        const galGrdI  =r.findIndex(c=>c==='guard');
+        if(galShiftI!==-1&&galLocI!==-1&&galEmpI!==-1){
+          headerRow=i;isGallagherSummary=true;
+          cols={shiftIdx:galShiftI,locIdx:galLocI,routeIdx:galRouteI,empIdx:galEmpI,guardIdx:galGrdI};
+          break;
+        }
         // TIAA Cleaned format detection: has 'shift' + 'location' + 'emp count'
         const tiaaShiftI=r.findIndex(c=>c==='shift');
         const tiaaLocI  =r.findIndex(c=>c==='location');
@@ -1138,7 +1157,7 @@ function handleExcelUpload(file){
           break;
         }
       }
-      if(headerRow===-1){showExcelErr('Header not found! Supported: TIAA Cleaned (Shift, Location, Emp Count, Guard) · NBH (Shift, Planned Locality, Planned PAX, Guard Required) · AFTER (T NO, Location, Count, FLAP)');return;}
+      if(headerRow===-1){showExcelErr('Header not found! Supported: Gallagher Summary (Shift Timing, Location, Route No, Emp Count, Guard) · TIAA Cleaned (Shift, Location, Emp Count, Guard) · NBH (Shift, Planned Locality, Planned PAX, Guard Required) · AFTER (T NO, Location, Count, FLAP)');return;}
       function parseTime(val){
         if(val==null||val==='') return null;
         if(typeof val==='number'){const t=Math.round(val*24*60),h=Math.floor(t/60)%24,m=t%60;return String(h).padStart(2,'0')+String(m).padStart(2,'0');}
@@ -1160,7 +1179,25 @@ function handleExcelUpload(file){
       for(let i=headerRow+1;i<raw.length;i++){
         const row=raw[i];
         if(!row||!row.some(v=>v!=null&&v!=='')) continue;
-        if(isTIAA){
+        if(isGallagherSummary){
+          // Skip TOTAL SHIFT rows and blank separator rows: Route No must be a number (e.g. "5") or "FLAP5"
+          const routeRaw=cols.routeIdx>=0?String(row[cols.routeIdx]??'').trim():'';
+          const routeNum=parseInt(routeRaw.replace(/^FLAP/i,''));
+          if(!routeRaw||isNaN(routeNum)) continue;
+          const routeFlap='FLAP'+routeNum; // normalize → Merchant Name (works for both Pickup & Drop)
+          const timing=cols.shiftIdx>=0?String(row[cols.shiftIdx]||'').trim():'';
+          const location=cols.locIdx>=0?String(row[cols.locIdx]||'').trim():'';
+          if(!location) continue;
+          const emp=cols.empIdx>=0?(parseInt(row[cols.empIdx])||0):0;
+          const escort=cols.guardIdx>=0?(parseInt(row[cols.guardIdx])||0):0;
+          if(timing&&!firstTiming) firstTiming=timing;
+          excelRows.push({
+            tno:routeFlap,desc:'',
+            locationName:location,
+            emp,escort,timing,flap:routeFlap,source:'excel',
+            isGallagherSummary:true
+          });
+        } else if(isTIAA){
           // TIAA Cleaned format: Shift | Location | Emp Count | Guard | M/F
           const timing=parseTIAAShift(cols.shiftIdx>=0?row[cols.shiftIdx]:null);
           const location=cols.locIdx>=0?String(row[cols.locIdx]||'').trim():'';
@@ -1220,7 +1257,9 @@ function handleExcelUpload(file){
       document.getElementById('excel-drop-zone').classList.add('loaded');
       document.getElementById('excel-dz-sub').textContent='\u2705 '+excelRows.length+' rows ready \u2014 click to replace';
       const cm=document.getElementById('excel-col-map');
-      if(isTIAA){
+      if(isGallagherSummary){
+        cm.innerHTML='<strong>Gallagher Summary format:</strong><br>Shift Timing \u2192 Timing<br>Location \u2192 P_Order_id &amp; D_Order_id<br>Emp Count \u2192 Planned Employees<br>Guard \u2192 Escort<br><span style="color:var(--accent)">\u26a0\ufe0f 2345 timing \u2192 Pickup 00:01 / Delivery 01:30 (special rule, Drop only)</span>';
+      } else if(isTIAA){
         const tiaaMode=currentMode==='pickup'?'P_Street Level Address':'Street Level Address';
         cm.innerHTML='<strong>TIAA Cleaned format:</strong><br>Shift \u2192 Timing<br>Location \u2192 '+tiaaMode+' + P_Order_id + D_Order_id<br>Emp Count \u2192 Planned Employees<br>Guard \u2192 Escort';
       } else if(isNBH){
@@ -1279,7 +1318,7 @@ function parseAndPreview(){
   empty.style.display='none';inner.style.display='block';
   const isPickup=currentMode==='pickup';
   tbody.innerHTML=rows.map((r,i)=>{
-    const rc=r.timing?calcForTiming(r.timing,ds):globalCalc;
+    const rc=r.timing?calcForTiming(r.timing,ds,{gallagherSummary:r.isGallagherSummary}):globalCalc;
     const isExcel=(r.source==='excel');
     const locDisplay=isExcel?(r.desc||r.locationName):r.loc;
     const isSplCab=isExcel&&/^SPL\s*CAB$/i.test(r.tno||'');
@@ -1313,7 +1352,7 @@ function downloadCSV(){
   const isPickup=currentMode==='pickup';
   const ds=document.getElementById('trip-date').value;
   const dataRows=rows.map(r=>{
-    const rc=r.timing?calcForTiming(r.timing,ds):calc;
+    const rc=r.timing?calcForTiming(r.timing,ds,{gallagherSummary:r.isGallagherSummary}):calc;
     if(!rc) return null;
     const isExcel=(r.source==='excel');
     // For AFTER excel: desc=Description (street address), locationName=Location (order id)
@@ -2046,8 +2085,23 @@ function nbhExport() {
     reader.onload = e => {
       try {
         const wb = XLSX.read(e.target.result, { type: 'array' });
-        const pickupSheet = wb.SheetNames.find(n => n.toLowerCase().includes('pick'));
-        const dropSheet   = wb.SheetNames.find(n => n.toLowerCase().includes('drop'));
+        let pickupSheet = wb.SheetNames.find(n => n.toLowerCase().includes('pick'));
+        let dropSheet   = wb.SheetNames.find(n => n.toLowerCase().includes('drop'));
+
+        // Fallback: sheet name doesn't say pick/drop (e.g. plain "Sheet1").
+        // Detect by scanning each sheet's title row for "...Login." / "...Logout."
+        if (!pickupSheet && !dropSheet) {
+          for (const name of wb.SheetNames) {
+            const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], { header:1, defval:null, raw:false });
+            for (let r = 0; r < Math.min(rows.length, 5); r++) {
+              const c0 = rows[r] && rows[r][0] != null ? String(rows[r][0]) : '';
+              if (!c0) continue;
+              if (/logout/i.test(c0)) { dropSheet = dropSheet || name; break; }
+              if (/login/i.test(c0))  { pickupSheet = pickupSheet || name; break; }
+            }
+          }
+        }
+
         if (!pickupSheet && !dropSheet) { gallagherErr('No "pick" or "drop" sheet found'); return; }
         if (pickupSheet) galData.pickup = galParseSheet(wb.Sheets[pickupSheet], false);
         if (dropSheet)   galData.drop   = galParseSheet(wb.Sheets[dropSheet],   true);
@@ -2144,7 +2198,7 @@ function nbhExport() {
         if (route != null && empCount > 0) {
           results.push({
             shift:    routeShift || currentShift || '??',
-            location: isDrop ? (lastArea || firstArea) : firstArea,
+            location: firstArea || lastArea,
             route,
             empCount,
             guard: guard ? 1 : 0
@@ -2252,7 +2306,7 @@ function nbhExport() {
     ];
     for (const shift of shifts) {
       const rows = data.filter(r => r.shift === shift);
-      rows.forEach(r => summaryRows.push([galFmtShift(r.shift), r.location||'', r.route, r.empCount, r.guard]));
+      rows.forEach(r => summaryRows.push([galFmtShift(r.shift), r.location||'', 'FLAP'+r.route, r.empCount, r.guard]));
       const sEmp = rows.reduce((s,r) => s + r.empCount, 0);
       summaryRows.push(['TOTAL SHIFT ' + galFmtShift(shift), '', rows.length + ' routes', sEmp,
         'TR:' + rows.filter(r=>r.guard===1).length + ' NASEL:' + rows.filter(r=>r.guard===0).length]);
