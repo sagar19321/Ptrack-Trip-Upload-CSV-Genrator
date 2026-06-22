@@ -944,11 +944,18 @@ function parsePaste(){
   //   "16:00"          HH:MM standalone
   //   "17:30 - Drop"   HH:MM dash label
   // Multiple timing groups supported in one paste.
+  // SPECIAL MARKERS: lines containing Admin/Adhoc/Shuttle (no trailing number) set Merchant Name for subsequent rows.
+  const SPECIAL_MARKERS=[
+    {re:/admin/i,         label:'Admin Duty'},
+    {re:/ad[\s\-]?hoc/i,  label:'Adhoc'},
+    {re:/shutt?l/i,       label:'Shuttle'},
+  ];
   const raw=document.getElementById('paste-box').value;
   const lines=raw.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
   const result=[];
   let currentTiming=null;
   let firstTiming=null;
+  let currentSpecialMarker='';
 
   for(const line of lines){
     // ── ALL TIMING FORMATS — any combination auto-detected ────────────────
@@ -995,7 +1002,7 @@ function parsePaste(){
       if(h<24&&m<60){
         const tv=pad2(h)+pad2(m);
         currentTiming=tv;if(!firstTiming)firstTiming=tv;
-        result.push({loc:inlineTimingGuardM[2].trim(),emp:parseInt(inlineTimingGuardM[3]),escort:parseInt(inlineTimingGuardM[4]),timing:currentTiming});
+        result.push({loc:inlineTimingGuardM[2].trim(),emp:parseInt(inlineTimingGuardM[3]),escort:parseInt(inlineTimingGuardM[4]),timing:currentTiming,merchantNote:currentSpecialMarker});
         continue;
       }
     }
@@ -1008,7 +1015,7 @@ function parsePaste(){
       if(h<24&&m<60){
         const tv=pad2(h)+pad2(m);
         currentTiming=tv;if(!firstTiming)firstTiming=tv;
-        result.push({loc:inlineTimingM[2].trim(),emp:parseInt(inlineTimingM[3]),escort:0,timing:currentTiming});
+        result.push({loc:inlineTimingM[2].trim(),emp:parseInt(inlineTimingM[3]),escort:0,timing:currentTiming,merchantNote:currentSpecialMarker});
         continue;
       }
     }
@@ -1016,15 +1023,20 @@ function parsePaste(){
     // Guard / Escort pattern: "Aundh 2+1" or "Vishrantwadi -2+1(G)" or "Location 2+1G"
     // The +N part always goes to Escort column — G/g suffix is optional
     const guardM=l.match(/^(.+?)\s*[-\u2013]?\s*(\d+)\s*\+\s*(\d+)\s*\(?[Gg]?\)?\s*$/);
-    if(guardM){result.push({loc:guardM[1].trim(),emp:parseInt(guardM[2]),escort:parseInt(guardM[3]),timing:currentTiming});continue;}
+    if(guardM){result.push({loc:guardM[1].trim(),emp:parseInt(guardM[2]),escort:parseInt(guardM[3]),timing:currentTiming,merchantNote:currentSpecialMarker});continue;}
 
     // Location EMP GUARD — "Pimpri 1 0" or "Mundhwa 1 1" (2 numbers at end = emp + guard)
     const twoNumM=l.match(/^(.+?)\s+(\d+)\s+(\d+)\s*$/);
-    if(twoNumM){result.push({loc:twoNumM[1].trim(),emp:parseInt(twoNumM[2]),escort:parseInt(twoNumM[3]),timing:currentTiming});continue;}
+    if(twoNumM){result.push({loc:twoNumM[1].trim(),emp:parseInt(twoNumM[2]),escort:parseInt(twoNumM[3]),timing:currentTiming,merchantNote:currentSpecialMarker});continue;}
 
     // Normal: "Ambegaon pathar -3" or "Bavdhan  2" or "Wakad 5"
     const normM=l.match(/^(.+?)\s*[-\u2013]\s*(\d+)\s*$/)||l.match(/^(.+?)\s{2,}(\d+)\s*$/)||l.match(/^(.+?)\s+(\d+)\s*$/);
-    if(normM){result.push({loc:normM[1].trim(),emp:parseInt(normM[2]),escort:0,timing:currentTiming});}
+    if(normM){result.push({loc:normM[1].trim(),emp:parseInt(normM[2]),escort:0,timing:currentTiming,merchantNote:currentSpecialMarker});continue;}
+
+    // ── Special marker lines (no trailing number): Admin Duty / Adhoc / Shuttle etc. ──
+    // Recognized even with small letters or minor spelling mistakes.
+    const markerHit=SPECIAL_MARKERS.find(m=>m.re.test(l));
+    if(markerHit){currentSpecialMarker=markerHit.label;}
   }
 
   // Auto-fill timing input from first timing detected in paste
@@ -1322,7 +1334,7 @@ function parseAndPreview(){
     const isExcel=(r.source==='excel');
     const locDisplay=isExcel?(r.desc||r.locationName):r.loc;
     const isSplCab=isExcel&&/^SPL\s*CAB$/i.test(r.tno||'');
-    const merchantDisplay=(isExcel?(isPickup||isSplCab?r.tno:r.flap):'')||'—';
+    const merchantDisplay=(isExcel?(isPickup||isSplCab?r.tno:r.flap):(r.merchantNote||''))||'—';
     const merchantCell=merchantDisplay==='—'?'(blank)':merchantDisplay;
     return`<tr>
       <td class="num" style="color:${isExcel?'var(--green)':'var(--text3)'}">${isExcel?r.tno:(i+1)}</td>
@@ -1360,7 +1372,7 @@ function downloadCSV(){
     // For paste: loc=location name for all
     const locForStreet = isExcel ? (r.desc || r.locationName) : r.loc;
     const isSplCab = isExcel && /^SPL\s*CAB$/i.test(r.tno||'');
-    const merchantName = (isExcel ? (isPickup || isSplCab ? r.tno : r.flap) : '') || '-';
+    const merchantName = (isExcel ? (isPickup || isSplCab ? r.tno : r.flap) : (r.merchantNote||'')) || '-';
     const streetAddr   = isPickup ? co.a : locForStreet;
     const pStreetAddr  = isPickup ? locForStreet : co.a;
     // Pickup: P_Order_id & D_Order_id = pickup location (pStreetAddr)
