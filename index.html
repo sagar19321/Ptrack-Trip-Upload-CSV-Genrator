@@ -341,6 +341,19 @@
   /* ── TIAA CLEANER TAB ── */
   .tab.tiaa-tab.active{color:#fff;background:linear-gradient(135deg,#0d9488,#0f766e);border-color:rgba(13,148,136,0.6);box-shadow:0 4px 14px rgba(13,148,136,0.4),0 0 0 1px rgba(13,148,136,0.3) inset;}
   #tiaa-panel{display:none;padding:20px 28px;max-width:1400px;margin:0 auto;}
+  .admin-subtab{padding:8px 16px;font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;}
+  .admin-subtab:hover{color:var(--text2);}
+  .admin-subtab.active{color:var(--purple);border-bottom-color:var(--purple);}
+  .admin-stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);}
+  .admin-stat-card .num{font-family:var(--mono);font-size:26px;font-weight:600;color:var(--text);line-height:1.1;}
+  .admin-stat-card .lbl{font-size:11px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;}
+  .comp-act-btn{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);cursor:pointer;margin-right:4px;}
+  .comp-act-btn.edit{color:var(--accent);border-color:var(--accent);}
+  .comp-act-btn.del{color:var(--danger);border-color:var(--danger);}
+  .comp-act-btn:hover{opacity:0.8;}
+  .src-tag{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:10px;}
+  .src-tag.base{background:var(--surface2);color:var(--text3);}
+  .src-tag.custom{background:var(--purplebg);color:var(--purple);}
   #tiaa-dropZone{border:2px dashed #cbd5e1;border-radius:10px;padding:36px 20px;text-align:center;cursor:pointer;background:#fff;transition:all .2s;margin-bottom:12px;user-select:none;box-shadow:0 1px 3px rgba(0,0,0,.05);}
   #tiaa-dropZone:hover,#tiaa-dropZone.drag{border-color:#0d9488;background:#f0fdfa;}
   #tiaa-dropZone .dz-icon{font-size:32px;margin-bottom:8px;}
@@ -387,6 +400,10 @@
     <span class="tab-icon">📍</span>
     <span class="tab-label">DROP Trip</span>
   </div>
+  <div class="tab bulk-tab" id="tab-bulk" onclick="switchMode('bulk')">
+    <span class="tab-icon">📦</span>
+    <span class="tab-label">Bulk Multi-Company</span>
+  </div>
   <div class="tab cleaner-tab" id="tab-cleaner" onclick="switchMode('cleaner')">
     <span class="tab-icon"><img src="data:image/webp;base64,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" style="width:20px;height:20px;object-fit:contain;" alt="Gmail"/></span>
     <span class="tab-label">Mail Cleaner SP,MP</span>
@@ -402,6 +419,10 @@
   <div class="tab tiaa-tab" id="tab-tiaa" onclick="switchMode('tiaa')">
     <span class="tab-icon" style="display:flex;align-items:center;gap:3px;"><img src="data:image/webp;base64,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" style="width:20px;height:20px;object-fit:contain;border-radius:3px;" alt="TIAA"/><img src="data:image/webp;base64,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" style="width:20px;height:20px;object-fit:contain;" alt="Allscripts"/><img src="data:image/jpeg;base64,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6gF55AEL/jTAeaFkDtbIMv0FBYxZwPUbtnXmaMau1LRTGJcBiCoAnmaVxOFMmTFiRLN4RLcYbfv9/9oADAMBAAIAAwAAABD333333333333333333333333333333333333333333333333333333333333333333n3kHPvjX/z333lVYjvWDgHX3320w8z36747z3333333333333333333333333333333333333333333333333333333333333333333/8QAIxEBAQEAAgAEBwAAAAAAAAAAAREAITEgUWDwEGFxgZGh8f/aAAgBAwEBPxD0GMYTTLmx7IaNnfWSLhCizJDOXDEcucdngIg5QDJmrvz3KHH8yUbLPzg6q+Wu+u/Wb3OXIo+/tmEt8Aqp3iXIvnkQdaEu8KKJr7m+eAKX4AFnQaojv0J//8QAJBEBAAIBAgUFAQAAAAAAAAAAAQARITFRQWGB0fAQIGChsZH/2gAIAQIBAT8Q+Btg/cH7q7wEnXelsrzIC+FQTuYyFF6RccGLmJoawC9j7GHxmLyGzL5pABaMfrMFZ0vqysVYXzxKKIVrj+3ccY3DpZCUU3P0fkXmEqufJ3gkUbewGCxjblNnnaDRV9Kl4bG8WGjXStpXicnnaOCo0+mcQpnblK8wPgn/xAAlEAEBAAIDAAEEAQUAAAAAAAABEQAhMUFRYRAwcYHwQHCAodH/2gAIAQEAAT8Q/wAAS7VQYHl3iuUkMOnMxix4JQLs0AXsYf7MEEqCT5B/RPmKUswA2qoAYQ2Q5g1YfEX0xoKkYkI8tf5pjj2ofgBJegDznaTaJYFw1qTX7tO+CW7kwkKm9Evw/e98YUzJd6Sf7QjnCUY6Yko6OlX0NqCdySQp2DXM89EyDoU10A4S8CYA0I1PFOMootgEVQKG1pawkK9s5dKFN6OMgQVkOaDZjYQNbBZ0awntsS9gqgy62a5JXwKT2ra4cvXF4tt9tPsBIzSjVn2Z4obDCDrq0NrEJ0AUYgKvFKG2NHUh41yA7Jwk394H0TGoML9JCLwN8zBWIRLNs2V7uOnE237QK7dZdnF2kAX4P3XhiinymUUQgoA0VV01npHONhKaBpHRFpWZg+3qYfPHF+FApFh2kB6mEtlkZSbrFeL+caZLCUF3n1dq5tQxQrpOpyg+Axf7IDo0lkCagLAw50aI9xC9+fYcJa3kKnwi/wAcFVNAnqb0aOeHLHjdfbQAxNCl1HW82nxPom/n/H0mC4VLE6XMAaATtonzd/hHvGFRZLtxdzB8fbhiZiw1KA8PVAqg3B+hbKPI3E6xJHWBx3nGV/qp/Wct8BKX9AA7jHoQcAMRHhHrGOFqFJjygXBUdsmxXyrGzkGhetfYdVZcEDR6QEdwLrDpKnTPb5F4uOHWEetn1/xyP4wdACCPCqlyuMoi7NrghYLDoxbtV5FBICnTkzAOVykshBaJSUw6GsbgIKrrreE6cFoxM5AHMwmyYa1w223NTviDlRqSgI1zp1UZeTA+sDMQ/BpIWnaUDTu0ZF4AujgfoRd4jEnXqHEGw7xqBZfD6ob+VwqBp8oXEbKAOesowt9GDIX5TnNJhyoWwCc7ANqJ/v7/AP/Z" style="width:20px;height:20px;object-fit:contain;border-radius:3px;" alt="Altera"/></span>
     <span class="tab-label">Tiaa,Allscript,Altera Cleaner</span>
+  </div>
+  <div class="tab admin-tab" id="tab-admin" onclick="switchMode('admin')" style="display:none;margin-left:auto;background:rgba(124,58,237,0.15);border-color:rgba(124,58,237,0.4);">
+    <span class="tab-icon">🔐</span>
+    <span class="tab-label">Admin</span>
   </div>
 </div>
 
@@ -505,6 +526,7 @@
         <span class="count-badge" id="row-count-badge">0 rows</span>
         <div style="margin-left:auto;display:flex;gap:8px">
           <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
+          <button class="btn btn-secondary" id="copy-btn" onclick="copyCSV()" title="Copy in Excel/Sheet-ready format (each column → separate cell)">📋 Copy for Sheet</button>
           <button class="btn btn-drop" id="dl-btn" onclick="downloadCSV()">⬇ Download CSV</button>
         </div>
       </div>
@@ -677,7 +699,137 @@
   </div>
 </div>
 
+<!-- BULK MULTI-COMPANY PANEL -->
+<div id="bulk-panel" style="display:none;padding:20px 28px;max-width:1400px;margin:0 auto;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+    <h2 style="font-family:var(--mono);font-size:19px;margin:0;">📦 Bulk Multi-Company CSV</h2>
+    <span style="font-size:12px;color:var(--text3);">One box · many companies · per-company timing</span>
+  </div>
+
+  <!-- Settings row -->
+  <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);">
+    <div class="field" style="margin:0;">
+      <label>Trip Direction</label>
+      <div style="display:flex;gap:6px;">
+        <button class="input-mode-btn active" id="bulk-mode-drop" onclick="bulkSetMode('drop')">📍 Drop</button>
+        <button class="input-mode-btn" id="bulk-mode-pickup" onclick="bulkSetMode('pickup')">🚐 Pickup</button>
+      </div>
+    </div>
+    <div class="field" style="margin:0;"><label>Date (all companies)</label><input type="date" id="bulk-date" oninput="bulkPreview()"></div>
+    <div class="field" style="margin:0;"><label>Trip Type</label><input type="number" id="bulk-triptype" value="5" min="1" style="width:90px;" oninput="bulkPreview()"></div>
+    <div style="margin-left:auto;font-size:12px;color:var(--text2);line-height:1.5;">
+      <strong>Format:</strong> <code style="background:var(--surface2);padding:1px 5px;border-radius:4px;">@CompanyName</code> line starts a company<br>
+      then its <strong>timing</strong> and <strong>locations</strong> below it
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
+    <!-- Input -->
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <div class="sec-label" style="margin:0;">Paste all companies</div>
+        <button class="btn btn-secondary" style="margin-left:auto;padding:4px 10px;font-size:11px;" onclick="bulkInsertExample()">Insert example</button>
+        <button class="btn btn-secondary" style="padding:4px 10px;font-size:11px;" onclick="document.getElementById('bulk-box').value='';bulkPreview();">Clear</button>
+      </div>
+      <textarea id="bulk-box" class="paste-area" style="min-height:420px;font-size:13px;" placeholder="@MAERSK&#10;1930&#10;Talawade 5&#10;Nigdi 3&#10;Wakad 2 1&#10;&#10;@AVALARA&#10;1730&#10;Kharadi 4&#10;Viman Nagar 6&#10;&#10;@HCL EON&#10;2000&#10;Hadapsar 3" oninput="bulkPreview()"></textarea>
+      <div id="bulk-hint" class="parse-hint" style="margin-top:8px;">↑ Paste companies above — preview updates live</div>
+    </div>
+
+    <!-- Preview -->
+    <div>
+      <div class="sec-label" style="margin-bottom:6px;">Preview by company</div>
+      <div id="bulk-preview" style="max-height:470px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+  </div>
+
+  <!-- Warnings -->
+  <div id="bulk-warn" style="display:none;margin-top:14px;background:var(--warnbg);border:1px solid var(--warn);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--warn);"></div>
+
+  <!-- Actions -->
+  <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;align-items:center;">
+    <button class="btn btn-drop" id="bulk-combined-btn" onclick="bulkDownloadCombined()">⬇ Combined CSV (1 file)</button>
+    <button class="btn btn-pickup" id="bulk-separate-btn" onclick="bulkDownloadSeparate()">⬇ Separate CSVs (ZIP)</button>
+    <button class="btn btn-secondary" id="bulk-copy-btn" onclick="bulkCopyCombined()" title="Copy in Excel/Sheet-ready format (each column → separate cell)">📋 Copy for Sheet</button>
+    <span id="bulk-total" style="margin-left:auto;font-family:var(--mono);font-size:13px;color:var(--text2);"></span>
+  </div>
+
+  <div class="success-msg" id="bulk-success" style="margin-top:12px;">✅ <span id="bulk-success-detail"></span></div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel" style="display:none;padding:20px 28px;max-width:1400px;margin:0 auto;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
+    <h2 style="font-family:var(--mono);font-size:20px;color:var(--purple);margin:0;">🔐 Admin Dashboard</h2>
+    <span id="admin-sync-badge" style="font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:20px;background:var(--warnbg);color:var(--warn);">Local storage only</span>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <button class="btn btn-secondary" onclick="adminRefresh()">🔄 Refresh</button>
+      <button class="btn btn-secondary" onclick="adminExportLog()">⬇ Export Log</button>
+    </div>
+  </div>
+
+  <!-- Sub-tabs -->
+  <div style="display:flex;gap:8px;margin-bottom:18px;border-bottom:2px solid var(--border);padding-bottom:2px;">
+    <button class="admin-subtab active" id="adm-sub-dash" onclick="adminSubTab('dash')">📊 Trip Stats</button>
+    <button class="admin-subtab" id="adm-sub-comp" onclick="adminSubTab('comp')">🏢 Companies</button>
+  </div>
+
+  <!-- DASHBOARD SECTION -->
+  <div id="admin-dash-section">
+    <div id="admin-stat-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:22px;"></div>
+
+    <h3 style="font-family:var(--mono);font-size:14px;color:var(--text2);margin:0 0 10px;">Trips per Company</h3>
+    <div class="mc-tscroll" style="margin-bottom:24px;">
+      <table>
+        <thead><tr>
+          <th>#</th><th>COMPANY</th><th>TOTAL TRIPS</th><th>TOTAL ROWS</th><th>PICKUP</th><th>DROP</th><th>LAST USED</th>
+        </tr></thead>
+        <tbody id="admin-company-tbody"></tbody>
+      </table>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:14px;color:var(--text2);margin:0 0 10px;">Daily History</h3>
+    <div class="mc-tscroll">
+      <table>
+        <thead><tr>
+          <th>DATE</th><th>TRIPS</th><th>ROWS</th><th>COMPANIES</th>
+        </tr></thead>
+        <tbody id="admin-date-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- COMPANIES SECTION -->
+  <div id="admin-comp-section" style="display:none;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px;box-shadow:var(--shadow);">
+      <div style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--purple);margin-bottom:14px;" id="comp-form-title">➕ Add New Company</div>
+      <input type="hidden" id="comp-edit-key" value="">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="field"><label>Company Name</label><input type="text" id="comp-f-name" placeholder="e.g. Magna Automotive"></div>
+        <div class="field"><label>Phone Number</label><input type="text" id="comp-f-phone" placeholder="e.g. 9011600786"></div>
+        <div class="field"><label>Email</label><input type="text" id="comp-f-email" placeholder="e.g. magna@gmail.com"></div>
+        <div class="field"><label>Address</label><input type="text" id="comp-f-addr" placeholder="Full pickup / company address"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn btn-drop" onclick="adminSaveCompany()">💾 Save Company</button>
+        <button class="btn btn-secondary" onclick="adminResetCompanyForm()">Cancel</button>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <h3 style="font-family:var(--mono);font-size:14px;color:var(--text2);margin:0;">All Companies (<span id="comp-count">0</span>)</h3>
+      <input type="text" id="comp-search" placeholder="Search..." oninput="adminRenderCompanies()" style="margin-left:auto;padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;width:200px;">
+    </div>
+    <div class="mc-tscroll">
+      <table>
+        <thead><tr><th>#</th><th>NAME</th><th>PHONE</th><th>EMAIL</th><th>ADDRESS</th><th>SOURCE</th><th>ACTIONS</th></tr></thead>
+        <tbody id="admin-complist-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 const COMPANIES=[
   {n:'Allscripts',p:'7770012901',e:'allscripts@gmail.com',a:'Allscripts, Eon Free Zone, Kharadi'},
@@ -732,10 +884,97 @@ const COMPANIES=[
   {n:'Vodafone PB',p:'7263975226',e:'Vodafonepb@gmail.com',a:'Viman Nagar, Pune, Maharashtra, India'},
   {n:'Cogneesol',p:'7770012454',e:'Cogneesol@gmail.com',a:'Aiopsgroup Commerce India Private Limited Office 06-112, WeWork, Tower 5 World Trade Center Tower 5, EON Free Zone, Kharadi, Pune, Maharashtra 411014, India'},
   {n:'TCL',p:'7770012943',e:'tcl@gmail.com',a:'Tata Communications Limited JV49+Q7J, Dighi'},
+  {n:'Magna Automotive',p:'9011600786',e:'Magna@gmail.com',a:'OM CHAMBERS, Bhosari Telco Road, MIDC, Bhosari, Pimpri-Chinchwad, Maharashtra, India'},
   {n:'Test',p:'7770012932',e:'test@gmail.com',a:'DNK SQUARE, 301, Airport road, Sakore Nagar, Viman Nagar, Pune, Maharashtra 411014'}
 ];
 
+const LOCATIONS=['Airport','Ajmera','Ajmera Pimpri Chinchwad','Akashwani','Akashwani Hadapsar','Akurdi','Akurdi Railway Station','Alande','Alandi','Alandi Chorachi','Alandi Devachi','Alandi Rd','Alandi Road','Alegaon','Alephata','Alka Talkis Chowk','Allscripts','Amanora Park','Amazon','Ambade','Ambale','Ambarvet','Ambavade','Ambavane','Ambegaon','Ambegaon BK','Ambegaon Budruk','Ambegaon Khurd','Ambegaon Pathar','Ambeghar','Ambethan','Ambi','Amble','Amboli','Amdabad','Ammunition Factory Khadki','Amondi','Anand Nagar','Anandnagar','Anandnagar    Pune','Anantnagar Nigade','Andgaon','Andhalgaon','Anjanavale','Anthurne','Antroli','Aptale','Apti','Armament','Arvi    Pune','Arvi Haveli','Asane','Ashtapur','Audar','Aundh','Aundh Camp','Aundh Rd','Aundh Road','Aundh T.S.','Avasari BK','Avhat','Avsari KH','Babhurdi','Bahul','Bajirao Road','Balaji Nagar','Balewadi','Balewadi Phata','Ballalwadi','Baner','Baner Gaon','Baner Road','Baramati','Baramati Court','Baramati Midc','Barclays','Barclays Hinjewadi','Barhanpur','Bari BK','Bavdhan','Bawada','Bazarwadi','Beam Wirelee Station','Bebedhol','Belawade','Belawadi','Belha','Belsar','Bet Narayan Maharaj','Bhadas','Bhamburde','Bhandgaon','Bhavani Peth','Bhavaninagar    Pune','Bhawani Peth','Bhigwan','Bhigwan R S','Bhimashankar','Bhivadi','Bhivari','Bhodani','Bhondave Wadi','Bhongavali','Bhor','Bhorghar','Bhorgiri','Bhosari','Bhosari Goan','Bhosari I.E.','Bhosari Pimpri Chinchwad','Bhosarigoan','Bhose','Bhoyare','Bhugaon','Bhukum','Bhusari Colony','Bhutonde','Bibewadi','Bibi','Bibvewadi','Bijali Nagar','Bijali Nagar Pimpri Chinchwad','Bijawadi','Bny Mellon','Bombay Sappers','Bopgaon','Bopkhel','Bopodi','Bori','Bori Aindi','Bori BK','Bori Paradhi','Boribyal','Botanical Garden','Botanical Garden    Pune','Burunjwadi','Camp','Capita','Cc4','Cdk','Chakan','Chambli','Chandkhed','Chandoli BK','Charholi Budruk','Charoli BK','Charoli Budruk','Chas','Chas    Pune','Chavand','Chikhalgaon','Chikhali','Chikhali Pimpri Chinchwad','Chilewadi','Chimbli','Chinchani Camp','Chincholi','Chinchoshi','Chinchwad','Chinchwad East','Chinchwad Gaon','Chinchwadgaon','Cod Dehu Road','Commerzone It Park Yerwada, Pune Maharashtra','Congress House Road','Crm','Dahitane','Dalaj','Dapode','Dapodi','Dapodi Bazar','Dasve Lavasa','Datta Wadi','Daund','Daundaj','Dawadi','Dawanewadi','Db Hcl','Deccan Gymkhana','Degaon','Dehane','Dehu','Dehu Gaon','Dehu Road','Dehu Road Cantt','Dehu Road Police Station','Delwadi','Deulgaonraja','Devale','Dhakale','Dhamane','Dhamani','Dhamari','Dhangavadi','Dhankawadi','Dhanore','Dhanori','Dhayari','Dhayari Dsk','Dhayari Phata','Dhekalwadi','Dholwad','Dighi','Dighi Camp','Dimbhe Colony','Dingore','Diwa','Donda','Donje','Dorlewadi','Dr B Achowk','Dr.B.A. Chowk','Dsk Dhayari','Dukirkline','East Court Office','East Khadki','Eklahare','Erandwane','Ex. Serviceman Colony','Exserviceman Colony','Fhursungi','Film Institute','Fulgaon','Gadad','Galandwadi','Gallagher','Ganegaon Dumala','Ganegaon Khalasa','Ganesh Peth','Ganeshkhind','Gangapur KH','Garade','Gawadewadi','Ghodegaon    Pune','Ghorpade Peth','Ghorpadi','Ghorpadi Gaon','Ghorpadi Peth','Ghorpuri Bazar','Ghotavade','Ghotawadi','Ghotondi','Girawali','Girim','Godre','Gogalwadi E','Gohe BK','Gokhalenagar','Gokhle Nagar','Golegaon','Gondhale Nagar','Gopalwadi','Govt. Polytechnic','Govtpolytechnic','Gulani','Gulunche','Gunawadi','Gunjalwadi','Gunjawane','Gurholi','Guruwar Peth','H Efactory','H.E. Factory','Hadapsar','Hadapsar Gadital','Hadpsar I E','Hadpsar I.E.','Handewadi','Handewadi Road','Hargude','Harnas','Harni','Hatve BK','Hcl Eon','Hcl Hinjewadi','Hcl Magarpatta','Hingangaon','Hingniberdi','Hinjewadi','Hinjewadi Phase 1','Hinjewadi Phase 2','Hinjewadi Phase 3','Hirdoshi','Hivare','Hivare BK','Hivare KH','Hol','I.A.T','Iaf Station','Ibm Yerwad','Ibm Yerwada','Inamgaon','Indapur','Indapur Bazar','Indrayani Nagar','Indrayaninagar','Induri','Infotech  Park  Hinjawadi','Inglun','Ins Shivaji Lonavale','Jalgaon Kadepathar','Jambhali BK','Jambhe','Jambhori','Jambhut','Jategaon BK','Javalarjun','Jejuri','Jeur','Jhargadwadi','Jogwadi','Junnar','Kadadhe','Kadam Wak Wasti','Kadethan','Kadus','Kadve','Kaivalyadham','Kalamb','Kalamb    Pune','Kalas','Kalashi','Kaldari','Kalepadal','Kalewadi','Kalewadi Pimpri Chinchwad','Kalthan No 1','Kalus','Kalyan','Kambaleshwar','Kambegi','Kamdhenunagar','Kamshet','Kamthadi','Kanakwadi','Kandali','Kangaon','Kanhe','Kanhersar','Kanhur','Kapad Ganj','Kapurhol','Karandi','Karandi BK','Karandi Khedebare','Karanjawane','Karanje','Karanjgaon','Karawaghaj','Karda','Karegaon','Karhati','Kari','Karkhel','Karla','Karnawad','Karunj','Karve Nagar','Karvenagar','Kasari','Kasarsai','Kasarwadi','Kasba Peth','Kashedi','Kashing','Kasurdi','Katfal','Kati','Katraj','Katraj Kondhwa Road','Katyachiwadi','Kawtha','Kazad','Kedgaon    Pune','Kelawade','Kendur','Kenjal','Keshav Nagar','Kesnand','Ketkavale','Khadaki','Khadakwasla','Khadakwasla R.S.','Khadki','Khadki Bazar','Khadkumbe Exptl','Khadkwasla','Khalad','Khalumbre','Khamboli','Khamgaon','Khamgaon BK','Khamundi','Khanapur','Khanapur Haveli','Khandaj','Khandala','Khandi','Khandobachi Wadi','Khangaon','Khanote','Kharadi','Kharoshi','Khechare','Khed Shivapur','Khed Shivapur Baug','Khodad','Khondhwa KH','Khopodi','Khor','Khorochi','Khubi','Khutbhav','Kikvi','Kiwale','Kodapur','Kodit','Kohinde BK','Kolawade','Kolvadi','Kolvihire','Kolwadi','Kolwan','Kondhanpur','Kondhapuri','Kondhawale','Kondhwa','Kondhwa BK','Kondhwa Budruk','Kondhwa Khurd','Kondhwa Lh','Kondhwal','Koregaon Bhima','Koregaon Bhivar','Koregaon Mul','Korhale BK','Korhale KH','Kothale','Kothrud','Kothrud Depot','Koyali','Kude BK','Kudje','Kule','Kunjirwadi','Kuran','Kuran BK','Kuravali','Kurkumbh','Kurkundi','Kuruli','Kurungwadi','Kurwande','Kurwandi','Kusgaon','Kusgaon BK','Kushire BK','Kusur','Lakhangaon','Lakhewadi','Landewadi','Lasurna','Late','Lawale','Lohegaon','Lohgaon Wagholi Road Dadaji Vasti','Lohogaon','Lokmanya Nagar','Lokmanyanagar','Lonavala','Lonavala Bazar','Loni Bhapkar','Loni Deokar','Loni Dhamani','Loni Kalbhor','Lonikand','M.Phulenagar','Madanwadi','Madh','Madhukarnagar Patas','Magarpatta','Mahadeo Nagar','Mahalunge Ingale','Mahalunge Padwal','Maharashtra Housing Board','Maharashtra Housing Board Yerwada','Mahude BK','Mahur','Malad','Malawali','Male','Malegaon BK','Malegaon Irr Colony','Malewadi','Malshiras','Malthan','Manappawasti','Manchar','Mandave','Mandavgan Farata','Mandhar','Mandki','Mandvi BK','Mangalwar Peth','Mangalwar Peth    Pune','Mangaon','Mangrul','Manikdoh','Manjal Asani','Manjari','Manjari BK','Manjari Budruk','Manjari Farm','Margasni','Markal','Market Yard','Market Yard    Pune','Marunji','Masulkar Colony','Mavdi Kade Pathar','Medad','Mekhali','Midc Kurkumbh','Midc Ranjangaon Ganpati','Model Colony','Mohamadwadi','Mohammadwadi','Morgaon','Mose KH','Moshi','Moshi Pimpri Chinchwad','Mphasis Eon','Mphasis Limited, Eon Freee Zone Road, Kharadi','Mudhale','Mukhai','Mundhva','Mundhva Av','Mundhwa','Murti Modhave','Murum','Muthe','N I B M','N W College','N.C.L. Pune','N.D.A. Khadakwasla','N.I.A.','N.W. College','Naiphad','Nalavane','Nana Peth','Nanded','Nandgaon','Nane','Nangaon','Nanvij','Narayan Peth','Narayangaon','Nare Gaon','Narhe','Narhe Gaon','Narodi','Nasrapur','Natambi','Nathachi Wadi','Navi Peth','Navsahyadri','Naygaon','Nazare','Nazare Kade Pathar','Nda Main Gate','Nehru Nagar','Nehru Nagar Pimpri Chinchwad','Nehrunagar    Pune','Nere','Netwad','New Sangvi','Nhavare','Nhavi','Nibm','Nigdi','Nighoje','Nimbut','Nimgaon Bhogi','Nimgaon Ketki','Nimgaon Khed','Nimgaon Mahalungi','Nimgaon Sava','Nimgiri','Nimone','Nimsakhar','Nira R S','Nirawaghaj','Nirgude','Nirgudsar','Nirvi','Nirwangi','Old Sangvi','Ordanance Dep Talegaon Dabhade','Ordnance Factory Dehu Road','Osade','Otur','Ozar','P C N T','P.C.N.T.','Pabal','Pabe','Padvi','Pait','Palasdeo','Palu','Panawadi','Pandare','Pandheshwar','Pangare','Pangari','Panshet','Pargaon','Pargaon Memane','Pargaon Tarfe Ala','Pargaon Tarfe Avasari','Pargaon Tarfe Khed','Pargaon Tarfe Madh','Parinche','Parunde','Parvati','Parvati Gaon','Parwadi','Pashan','Pasure','Patas','Paud','Pawananagar','Perne','Peth    Pune','Phenix Care','Phugewadi','Phulawade','Phulenagar','Phursungi','Phursungi Pune','Pimpalgaon Joga','Pimpalgaon Mahalunge','Pimpalgaon Tarfa Narayangaon','Pimpalgaon Tarfe Chakan','Pimpalgaon Tarfe Ghoda','Pimpali','Pimpalwandi    Pune','Pimparkhed','Pimple','Pimple Gurav','Pimple Gurav Pimpri Chinchwad','Pimple Nilakh','Pimple Saudagar','Pimpri','Pimpri BK','Pimpri Colony','Pimpri Gaon','Pimpri P F','Pimpri Pendhar','Pimpri Sandas','Pimpri Waghire','Pingori','Pirangut','Pisarve','Pisavare','Pokhari','Pomgaon','Poona Travels','Pradhikaran','Pradhikaran Nigdi','Principal','Punawale','Pune','Pune Cantt East','Pune City','Pune New Bazar','R P T S Khandala','Rahatani','Rahatni','Rahu','Rahu Pimpalgaon','Rajegaon','Rajewadi','Rajgurunagar','Rajpur','Rajur','Rajuri','Rakh','Rangaon','Range Hills','Ranjane','Ranjangaon Ganpati','Ranjangaon Sandas','Ranjani','Ranmala','Rase','Rashtra Bhasha Bhavan','Rasta Peth','Ravangaon','Ravet','Raviwar Peth','Rayari','Redni','Retwadi','Rihe','Rohokadi','Roti','Rule','Rupeenagar','S Pcollege','S R P F Daund','S.P. College','S.S.C.Exam Board','Saburdi','Sachapir Street','Sadalgaon','Sadashiv Peth','Sadumbre','Sahajpurwadi','Sahakar Nagar','Sakhar','Sakore','Sakori Tarfe Belha','Sakurde','Sal','Salisbury Park','Salumbre','Sambhaji Nagar Pimpri Chinchwad','Sanaswadi','Sandbhorwadi Exptl','Sangamner','Sangamwadi','Sangavi','Sangavi Pimpri Chinchwad','Sangrun','Sangvi','Sansar','Sant Tukaram Nagar','Sapkalwadi','Sarati','Sarole','Sasane Nagar','Sasanenagar','Saswad','Sate','Saval','Savargaon','Savindane','Saygaon','Shaniwar Peth','Shaniwar Peth    Pune','Shelgaon','Shere','Shetfalgade','Shetphal Haveli','Shiavane','Shikrapur','Shind','Shindavane','Shindewadi','Shinoli','Shirapur','Shirasane','Shirasgaonkata','Shiravali','Shirgaon','Shirkoli','Shiroli','Shiroli B K','Shirsatwadi','Shirsuphal','Shirur    Pune','Shivaji Housing Society','Shivaji Nagar','Shivajinagar','Shivajinagar    Pune','Shivali','Shivane','Shivare','Shivari','Shive','Shivnagar','Shriprayagdham','Shukrawar Peth','Shukrawar Peth    Pune','Sihagad Road','Sinhagad Road','Sinhgad Technical Education Society','Solu','Someshwarnagar','Sonari','Songaon','Sopannagar','Srpf','Sukhsagar Nagar','Sungard','Supa    Pune','Surwad','Sus','Sus Pashan','Swargate','Swargate Chowk','T Vnagar','T.V. Nagar','Takali Bhima','Takave KH','Takawe BK','Taklihaji','Talawade','Talegaon Dabhade','Talegaon Dhamdhere','Talegaon G H','Taleghar','Taleran','Talwade','Tambad','Tambe','Tandali','Tandulwadi','Taparewadi','Tav','Tavshi','Tech Mahindra Commerzone','Tech Mahindra Kalyani Nagar','Tekawade','Telewadi','Thathawade','Thergaon','Thergaon Pimpri Chinchwad','Theur','Thugaon','Tiaa','Tingare Nagar','Tingre Nagar','Tirpad','Titeghar','Tiwai Hills','Tokawade','Tondal','Trc Tracmail India','Ubs','Udapur','Udhat','Umbraj','Umbre Navlakh','Undawadi K P','Undawadi Supa','Undri','Upper Indira Nagar','Uralgaon','Uravade','Urse','Uruli Devachi','Urulikanchan','Utchil','Utroli','Uttam Nagar','Uttam Nagar Shivane','Uttam Nagar Shivne','Uttamnagar','Vada    Pune','Vadagaon Budruk','Vadaj','Vadapuri','Vadebholhai','Vadeshwar','Vadgaon    Pune','Vadgaon Anand','Vadgaon Budruk','Vadgaon Dalache','Vadgaon Ghenanad','Vadgaon Kandali','Vadgaon Kashimbeg','Vadgaon Nimbalkar','Vadgaon Peer','Vadgaon Rasai','Vadgaon Sahani','Vadgaon Sheri','Vadhu BK','Vadki','Vagholi','Valati','Valha','Vanpuri','Vaphgaon','Varale','Vardade','Varkute KH','Varodi KH','Varoti BK','Varude','Varvand','Varye BK','Vasuli','Veer','Vehergaon','Velhe','Velu','Velvand','Venavadi','Veritas Baner','Veritas Eon','Veritas Hinjewadi','Vetale','Vidya Nagar','Vidyanagar    Pune','Viman Nagar','Visharant Wadi','Vishnupuri','Vishrantwadi','Vithalwadi','Vodafone Eon','Vodafone Mantri','Vodafone Phursungi','Vyahali','Wadgaon Budruk','Wadgaon Sheri','Waghapur','Wagholi','Wakad','Waki','Waki BK','Walchandnagar','Walekarwadi','Walki','Walunj','Wanawadi','Wangani','Wanowarie','Wanwadi','Warje','Washere','Watluj','Winzer','Wns Magarpatta','Wns Phursungi','Yamuna Nagar','Yamunanagar','Yavat','Yavat R S','Yedgaon','Yenere','Yeniye BK','Yerwada','Yerwada Jail','Yerwada T.S.'];
 const CSV_COLS=['Task Description*','Customer Email*','Customer Name*','Street Level Address*','City*','Zipcode/ Pincode*','Country*','Latitude','Longitude','Customer Phone Number','Delivery Date and Time ','Agent ID ','has_pickup ','Merchant Email','Merchant Name','P_Street Level Address*','P_City*','P_Zipcode/ Pincode*','P_Country*','P_Latitude','P_Longitude','Phone Number*','Pickup Date and Time ','P_Order_id','D_Order_id','Tags','Shift Timing*','Login Logout*','Trip Type*','Planned Employees*','Actual Employees*','Escort*'];
+
+/* ============================================================
+   ADMIN / LOGGING CONFIG
+   ------------------------------------------------------------
+   Paste your Google Apps Script Web App URL below to log every
+   CSV generation to a Google Sheet. Leave blank to use only
+   local (this-browser) storage.
+   ============================================================ */
+const TRIP_LOG_URL = ''; // <-- e.g. 'https://script.google.com/macros/s/AKfy.../exec'
+const LOCAL_LOG_KEY = 'ptrack_trip_log';
+const LOCAL_COMPANIES_KEY = 'ptrack_custom_companies';
+
+// Fire-and-forget log to Google Sheet + always keep a local backup.
+function logTrip(out, action){
+  const entry={
+    ts: new Date().toISOString(),
+    company: out.company,
+    rows: out.rows,
+    mode: out.mode,
+    timing: out.timing,
+    date: out.date,
+    action: action||'download'
+  };
+  // 1) Local backup (always)
+  try{
+    const arr=JSON.parse(localStorage.getItem(LOCAL_LOG_KEY)||'[]');
+    arr.push(entry);
+    localStorage.setItem(LOCAL_LOG_KEY, JSON.stringify(arr));
+  }catch(e){/* storage full or blocked — ignore */}
+  // 2) Google Sheet (if configured)
+  if(TRIP_LOG_URL){
+    try{
+      fetch(TRIP_LOG_URL, {
+        method:'POST',
+        mode:'no-cors',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify(entry)
+      }).catch(()=>{});
+    }catch(e){/* offline — local backup already saved */}
+  }
+}
+
+function getLocalLog(){
+  try{ return JSON.parse(localStorage.getItem(LOCAL_LOG_KEY)||'[]'); }
+  catch(e){ return []; }
+}
+
+/* ---- COMPANY MANAGEMENT (Add / Edit / Delete via Admin) ----
+   Built-in list = BASE_COMPANIES (above). User changes are stored
+   locally as an overrides object keyed by lowercase company name:
+     { "magna automotive": {n,p,e,a},   // edited or added
+       "test": {deleted:true} }         // deleted built-in
+   COMPANIES is rebuilt from BASE + overrides.                    */
+const BASE_COMPANIES = COMPANIES.slice();
+
+function getCompanyOverrides(){
+  try{ return JSON.parse(localStorage.getItem(LOCAL_COMPANIES_KEY)||'{}'); }
+  catch(e){ return {}; }
+}
+function saveCompanyOverrides(ov){
+  try{ localStorage.setItem(LOCAL_COMPANIES_KEY, JSON.stringify(ov)); }catch(e){}
+}
+function rebuildCompanies(){
+  const ov=getCompanyOverrides();
+  const out=[];
+  const seen=new Set();
+  // Base companies, with edits/deletions applied
+  for(const c of BASE_COMPANIES){
+    const key=c.n.toLowerCase();
+    seen.add(key);
+    const o=ov[key];
+    if(o&&o.deleted) continue;
+    out.push(o?{n:o.n,p:o.p,e:o.e,a:o.a}:c);
+  }
+  // Newly added companies (keys not in base)
+  for(const key in ov){
+    if(seen.has(key)) continue;
+    const o=ov[key];
+    if(o&&!o.deleted) out.push({n:o.n,p:o.p,e:o.e,a:o.a});
+  }
+  out.sort((a,b)=>a.n.toLowerCase().localeCompare(b.n.toLowerCase()));
+  COMPANIES.length=0;
+  Array.prototype.push.apply(COMPANIES, out);
+}
+rebuildCompanies();
 
 let currentMode = 'drop'; // 'drop' or 'pickup'
 let inputMode         = 'paste'; // 'paste' or 'excel'
@@ -755,12 +994,19 @@ function switchMode(mode) {
   document.getElementById('tab-nbh').classList.toggle('active', mode==='nbh');
   document.getElementById('tab-tiaa').classList.toggle('active', mode==='tiaa');
   document.getElementById('tab-gallagher').classList.toggle('active', mode==='gallagher');
+  document.getElementById('tab-bulk').classList.toggle('active', mode==='bulk');
+  document.getElementById('tab-admin').classList.toggle('active', mode==='admin');
   // Show/hide panels
-  document.querySelector('.main').style.display = (mode==='cleaner'||mode==='nbh'||mode==='tiaa'||mode==='gallagher') ? 'none' : 'grid';
+  const overlayModes=(mode==='cleaner'||mode==='nbh'||mode==='tiaa'||mode==='gallagher'||mode==='admin'||mode==='bulk');
+  document.querySelector('.main').style.display = overlayModes ? 'none' : 'grid';
   document.getElementById('cleaner-panel').style.display = mode==='cleaner' ? 'block' : 'none';
   document.getElementById('nbh-panel').style.display = mode==='nbh' ? 'block' : 'none';
   document.getElementById('tiaa-panel').style.display = mode==='tiaa' ? 'block' : 'none';
   document.getElementById('gallagher-panel').style.display = mode==='gallagher' ? 'block' : 'none';
+  document.getElementById('bulk-panel').style.display = mode==='bulk' ? 'block' : 'none';
+  document.getElementById('admin-panel').style.display = mode==='admin' ? 'block' : 'none';
+  if(mode==='admin'){ adminRefresh(); }
+  if(mode==='bulk'){ bulkInit(); }
   // Mode tag
   const modeTag = document.getElementById('mode-tag');
   const previewTag = document.getElementById('preview-mode-tag');
@@ -935,66 +1181,49 @@ function updateParseHint(rows){
   hint.textContent='✅ '+txt;
 }
 
-function parsePaste(){
-  // ---- SMART PARSER v2 — multi-format timing, both Drop & Pickup ----
-  // Supported timing formats:
-  //   "1730"           plain HHMM 4-digit alone
-  //   "1600 Drop"      HHMM + label (Drop or Pickup, both work)
-  //   "16:00 Pickup"   HH:MM + label
-  //   "16:00"          HH:MM standalone
-  //   "17:30 - Drop"   HH:MM dash label
-  // Multiple timing groups supported in one paste.
-  // SPECIAL MARKERS: lines containing Admin/Adhoc/Shuttle (no trailing number) set Merchant Name for subsequent rows.
+// ---- PURE line-parser: text block -> rows[] (no DOM). Used by single & bulk. ----
+// Returns {rows, firstTiming}. Each row: {loc,emp,escort,timing,merchantNote}
+function parseLinesToRows(raw){
   const SPECIAL_MARKERS=[
     {re:/admin/i,         label:'Admin Duty'},
     {re:/ad[\s\-]?hoc/i,  label:'Adhoc'},
     {re:/shutt?l/i,       label:'Shuttle'},
   ];
-  const raw=document.getElementById('paste-box').value;
-  const lines=raw.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  const lines=(raw||'').split('\n').map(l=>l.trim()).filter(l=>l.length>0);
   const result=[];
   let currentTiming=null;
   let firstTiming=null;
   let currentSpecialMarker='';
 
   for(const line of lines){
-    // ── ALL TIMING FORMATS — any combination auto-detected ────────────────
-    // Helper to validate & set timing
     const setTm=(h,m)=>{if(h<24&&m<60){const v=pad2(h)+pad2(m);currentTiming=v;if(!firstTiming)firstTiming=v;return true;}return false;};
 
-    // A: time first (colon/dot/h) + optional label  →  "16:30" "16.30" "16:30 pickup" "15.30 login"
+    // A: time first (colon/dot/h) + optional label
     const tmA=line.match(/^(\d{1,2})[:.h](\d{2})\s*[-\u2013]?\s*(pickup|drop|trip|login|logout)?\s*$/i);
     if(tmA&&setTm(parseInt(tmA[1]),parseInt(tmA[2]))) continue;
-
-    // B: HHMM first + optional label  →  "1630" "1630 pickup" "1530 login"
+    // B: HHMM first + optional label
     const tmB=line.match(/^(\d{3,4})\s*(pickup|drop|trip|login|logout)?\s*$/i);
     if(tmB){const t=tmB[1].padStart(4,'0');if(setTm(parseInt(t.slice(0,2)),parseInt(t.slice(2,4)))) continue;}
-
-    // C: label first + HH:MM/HH.MM  →  "Login 12:45" "Pickup 16.30" "logout 15h30"
+    // C: label first + HH:MM/HH.MM
     const tmC=line.match(/^(login|logout|pickup|drop|trip)\s+(\d{1,2})[:.h](\d{2})\s*$/i);
     if(tmC&&setTm(parseInt(tmC[2]),parseInt(tmC[3]))) continue;
-
-    // D: label first + HHMM  →  "Login 1245" "Pickup 1630"
+    // D: label first + HHMM
     const tmD=line.match(/^(login|logout|pickup|drop|trip)\s+(\d{3,4})\s*$/i);
     if(tmD){const t=tmD[2].padStart(4,'0');if(setTm(parseInt(t.slice(0,2)),parseInt(t.slice(2,4)))) continue;}
-
-    // E: <text> label HH:MM/HH.MM at end  →  "Avalara pickup 16.30" "Company login 13:30"
+    // E: <text> label HH:MM/HH.MM at end
     const tmE=line.match(/(pickup|drop|trip|login|logout)\s+(\d{1,2})[:.h](\d{2})\s*$/i);
     if(tmE&&setTm(parseInt(tmE[2]),parseInt(tmE[3]))) continue;
-
-    // F: <text> label HHMM at end  →  "Avalara pickup 1630" "Company login 1330"
+    // F: <text> label HHMM at end
     const tmF=line.match(/(pickup|drop|trip|login|logout)\s+(\d{3,4})\s*$/i);
     if(tmF){const t=tmF[2].padStart(4,'0');if(setTm(parseInt(t.slice(0,2)),parseInt(t.slice(2,4)))) continue;}
-
-    // G: time anywhere + label  →  "Hinjewadi 16:30 pickup" "WTC 1630 login"
+    // G: time anywhere + label
     const tmG=line.match(/(\d{1,2})[:.h](\d{2})\s*(pickup|drop|trip|login|logout)/i);
     if(tmG&&setTm(parseInt(tmG[1]),parseInt(tmG[2]))) continue;
 
-        // Strip leading serial number: "1." "12." etc.
+    // Strip leading serial number: "1." "12." etc.
     let l=line.replace(/^\d+\.\s*/,'');
 
-    // ── NEW: Inline timing format — "1900  MG Road Camp  1  0" or "2000 Lohgaon DY Patil Rd 1 0"
-    // Pattern: HHMM  LOCATION  EMP  GUARD  (time + location + count + guard all on one line)
+    // Inline timing + guard — "1900 MG Road 1 0"
     const inlineTimingGuardM=l.match(/^(\d{3,4})\s+(.+?)\s+(\d+)\s+(\d+)\s*$/);
     if(inlineTimingGuardM){
       const t=inlineTimingGuardM[1].padStart(4,'0');
@@ -1006,8 +1235,7 @@ function parsePaste(){
         continue;
       }
     }
-
-    // ── NEW: Inline timing format without guard — "1900  MG Road Camp  1"
+    // Inline timing without guard — "1900 MG Road 1"
     const inlineTimingM=l.match(/^(\d{3,4})\s+(.+?)\s+(\d+)\s*$/);
     if(inlineTimingM){
       const t=inlineTimingM[1].padStart(4,'0');
@@ -1019,33 +1247,31 @@ function parsePaste(){
         continue;
       }
     }
-
-    // Guard / Escort pattern: "Aundh 2+1" or "Vishrantwadi -2+1(G)" or "Location 2+1G"
-    // The +N part always goes to Escort column — G/g suffix is optional
+    // Guard / Escort — "Aundh 2+1"
     const guardM=l.match(/^(.+?)\s*[-\u2013]?\s*(\d+)\s*\+\s*(\d+)\s*\(?[Gg]?\)?\s*$/);
     if(guardM){result.push({loc:guardM[1].trim(),emp:parseInt(guardM[2]),escort:parseInt(guardM[3]),timing:currentTiming,merchantNote:currentSpecialMarker});continue;}
-
-    // Location EMP GUARD — "Pimpri 1 0" or "Mundhwa 1 1" (2 numbers at end = emp + guard)
+    // Location EMP GUARD — "Pimpri 1 0"
     const twoNumM=l.match(/^(.+?)\s+(\d+)\s+(\d+)\s*$/);
     if(twoNumM){result.push({loc:twoNumM[1].trim(),emp:parseInt(twoNumM[2]),escort:parseInt(twoNumM[3]),timing:currentTiming,merchantNote:currentSpecialMarker});continue;}
-
-    // Normal: "Ambegaon pathar -3" or "Bavdhan  2" or "Wakad 5"
+    // Normal — "Wakad 5" / "Ambegaon -3"
     const normM=l.match(/^(.+?)\s*[-\u2013]\s*(\d+)\s*$/)||l.match(/^(.+?)\s{2,}(\d+)\s*$/)||l.match(/^(.+?)\s+(\d+)\s*$/);
     if(normM){result.push({loc:normM[1].trim(),emp:parseInt(normM[2]),escort:0,timing:currentTiming,merchantNote:currentSpecialMarker});continue;}
-
-    // ── Special marker lines (no trailing number): Admin Duty / Adhoc / Shuttle etc. ──
-    // Recognized even with small letters or minor spelling mistakes.
+    // Special marker line
     const markerHit=SPECIAL_MARKERS.find(m=>m.re.test(l));
     if(markerHit){currentSpecialMarker=markerHit.label;}
   }
+  return {rows:result, firstTiming};
+}
 
+function parsePaste(){
+  const raw=document.getElementById('paste-box').value;
+  const {rows, firstTiming}=parseLinesToRows(raw);
   // Auto-fill timing input from first timing detected in paste
   if(firstTiming){
     const ti=document.getElementById('timing-input');
     if(ti.value!==firstTiming){ti.value=firstTiming;setTimeout(updateAuto,0);}
   }
-
-  return result;
+  return rows;
 }
 
 function calcForTiming(tv, ds, opts){
@@ -1352,78 +1578,103 @@ function parseAndPreview(){
 }
 function clearAll(){document.getElementById('paste-box').value='';parseAndPreview();}
 
-function downloadCSV(){
-  const co=getCo(),calc=getCalc();
-  if(!co){alert('Please select a company!');return;}
-  if(!calc){alert('Please fill Date and Timing! (4 digits: e.g. 1300)');return;}
-  const rows=getActiveRows();
-  if(!rows.length){alert(inputMode==='excel'?'Please upload an Excel sheet first!':'Please paste locations first!');return;}
-  const tt=document.getElementById('trip-type').value||5;
-  const tv=document.getElementById('timing-input').value||'';
-  const esc=v=>{const s=String(v??'');return(s.includes(',')||s.includes('"')||s.includes('\n'))?'"'+s.replace(/"/g,'""')+'"':s;};
-  const isPickup=currentMode==='pickup';
-  const ds=document.getElementById('trip-date').value;
-  const dataRows=rows.map(r=>{
-    const rc=r.timing?calcForTiming(r.timing,ds,{gallagherSummary:r.isGallagherSummary}):calc;
+const CSV_ESC=v=>{const s=String(v??'');return(s.includes(',')||s.includes('"')||s.includes('\n'))?'"'+s.replace(/"/g,'""')+'"':s;};
+
+// TSV escape: replace tabs and newlines (they'd break cell boundaries in Excel/Sheets).
+const TSV_ESC = v => String(v??'').replace(/[\t\r\n]/g, ' ');
+
+// Convert raw 2D rows → CSV (for file download) or TSV (for clipboard paste into Excel/Sheets).
+function rowsToCSV(header, rows){
+  return [header.map(CSV_ESC).join(','), ...rows.map(r=>r.map(CSV_ESC).join(','))].join('\r\n');
+}
+function rowsToTSV(header, rows){
+  return [header.map(TSV_ESC).join('\t'), ...rows.map(r=>r.map(TSV_ESC).join('\t'))].join('\r\n');
+}
+
+// Shared row builder — returns array of raw arrays (not joined). Used by CSV + TSV output.
+// co: {n,p,a}  rows: parsed rows  isPickup: bool  ds: date str  tt: trip type
+// fallbackCalc: calc object used when a row has no per-row timing.
+function buildDataRows(co, rows, isPickup, ds, tt, fallbackCalc){
+  return rows.map(r=>{
+    const rc=r.timing?calcForTiming(r.timing,ds,{gallagherSummary:r.isGallagherSummary}):fallbackCalc;
     if(!rc) return null;
     const isExcel=(r.source==='excel');
-    // For AFTER excel: desc=Description (street address), locationName=Location (order id)
-    // For NBH excel:   desc is empty → use locationName as street address too
-    // For paste: loc=location name for all
     const locForStreet = isExcel ? (r.desc || r.locationName) : r.loc;
     const isSplCab = isExcel && /^SPL\s*CAB$/i.test(r.tno||'');
     const merchantName = (isExcel ? (isPickup || isSplCab ? r.tno : r.flap) : (r.merchantNote||'')) || '-';
     const streetAddr   = isPickup ? co.a : locForStreet;
     const pStreetAddr  = isPickup ? locForStreet : co.a;
-    // Pickup: P_Order_id & D_Order_id = pickup location (pStreetAddr)
-    // Drop:   P_Order_id & D_Order_id = Location col (excel) or loc (paste)
     const orderId      = isPickup ? pStreetAddr : (isExcel ? r.locationName : r.loc);
     return [
-      '',                   // Task Description* — BLANK
-      '',                   // Customer Email*   — BLANK
-      co.n,                 // Customer Name* — original case (as per VM_CSV)
-      streetAddr,           // Street Level Address*
-      'Pune',               // City*
-      ',',                  // Zipcode/ Pincode*
-      'India',              // Country*
-      '',                   // Latitude
-      '',                   // Longitude
-      co.p,                 // Customer Phone Number
-      rc.delivery,          // Delivery Date and Time
-      '',                   // Agent ID
-      '1',                  // has_pickup ← always 1
-      '',                   // Merchant Email
-      merchantName,         // Merchant Name ← T NO (pickup+excel / SPL CAB drop) / FLAP (drop+excel) / '-' (paste)
-      pStreetAddr,          // P_Street Level Address*
-      'Pune',               // P_City*
-      ',',                  // P_Zipcode/ Pincode*
-      'India',              // P_Country*
-      '',                   // P_Latitude
-      '',                   // P_Longitude
-      co.p,                 // Phone Number*
-      rc.pickup,            // Pickup Date and Time
-      orderId,              // P_Order_id ← pStreetAddr (pickup) / locationName or loc (drop)
-      orderId,              // D_Order_id ← pStreetAddr (pickup) / locationName or loc (drop)
-      '',                   // Tags
-      rc.shift,             // Shift Timing*
-      isPickup ? '1' : '2', // Login Logout* ← Pickup=1 always, Drop=2 always
-      tt,                   // Trip Type*
-      r.emp,                // Planned Employees* ← Count col (excel) or emp (paste)
-      '',                   // Actual Employees*
-      r.escort              // Escort*
-    ].map(esc).join(',');
+      '', '', co.n, streetAddr, 'Pune', ',', 'India', '', '', co.p,
+      rc.delivery, '', '1', '', merchantName, pStreetAddr, 'Pune', ',', 'India', '', '',
+      co.p, rc.pickup, orderId, orderId, '', rc.shift, isPickup ? '1' : '2', tt, r.emp, '', r.escort
+    ];
   }).filter(Boolean);
+}
 
-  const csv=[CSV_COLS.map(esc).join(','),...dataRows].join('\r\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+// Builds CSV + TSV strings + metadata, or returns null (after alerting) if inputs are incomplete.
+function buildCSV(){
+  const co=getCo(),calc=getCalc();
+  if(!co){alert('Please select a company!');return null;}
+  if(!calc){alert('Please fill Date and Timing! (4 digits: e.g. 1300)');return null;}
+  const rows=getActiveRows();
+  if(!rows.length){alert(inputMode==='excel'?'Please upload an Excel sheet first!':'Please paste locations first!');return null;}
+  const tt=document.getElementById('trip-type').value||5;
+  const tv=document.getElementById('timing-input').value||'';
+  const isPickup=currentMode==='pickup';
+  const ds=document.getElementById('trip-date').value;
+  const dataRows=buildDataRows(co, rows, isPickup, ds, tt, calc);
+  const csv=rowsToCSV(CSV_COLS, dataRows);
+  const tsv=rowsToTSV(CSV_COLS, dataRows);
+  const filename=(isPickup?'pickup_':'drop_')+co.n.replace(/\s+/g,'_')+'_'+tv+'_'+ds+'.csv';
+  return {csv, tsv, filename, company:co.n, rows:dataRows.length, mode:(isPickup?'pickup':'drop'), timing:tv, date:ds};
+}
+
+function showSuccess(text){
+  const msg=document.getElementById('success-msg');
+  document.getElementById('success-detail').textContent=text;
+  msg.style.display='flex';setTimeout(()=>{msg.style.display='none';},5000);
+}
+
+function downloadCSV(){
+  const out=buildCSV();
+  if(!out)return;
+  const blob=new Blob([out.csv],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url;
-  a.download=(isPickup?'pickup_':'drop_')+co.n.replace(/\s+/g,'_')+'_'+tv+'_'+ds+'.csv';
+  a.download=out.filename;
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-  const msg=document.getElementById('success-msg');
-  document.getElementById('success-detail').textContent=rows.length+' rows — '+a.download;
-  msg.style.display='flex';setTimeout(()=>{msg.style.display='none';},5000);
+  showSuccess(out.rows+' rows — '+out.filename);
+  logTrip(out,'download');
+}
+
+function copyCSV(){
+  const out=buildCSV();
+  if(!out)return;
+  const done=()=>{
+    const btn=document.getElementById('copy-btn');
+    const orig=btn.innerHTML;
+    btn.innerHTML='✅ Copied!';
+    setTimeout(()=>{btn.innerHTML=orig;},2000);
+    showSuccess(out.rows+' rows copied — paste directly into Excel/Sheet');
+    logTrip(out,'copy');
+  };
+  // TSV pastes correctly into spreadsheet cells (each value → separate column)
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(out.tsv).then(done).catch(()=>fallbackCopy(out.tsv,done));
+  }else{
+    fallbackCopy(out.tsv,done);
+  }
+}
+
+function fallbackCopy(text,cb){
+  const ta=document.createElement('textarea');
+  ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.focus();ta.select();
+  try{document.execCommand('copy');cb();}catch(e){alert('Copy failed — please use Download instead.');}
+  document.body.removeChild(ta);
 }
 (function(){
   document.getElementById('trip-date').value=new Date().toISOString().slice(0,10);
@@ -2343,6 +2594,677 @@ function nbhExport() {
     el.style.display = 'none';
   }
 })();
+
+/* ============================================================
+   BULK MULTI-COMPANY LOGIC
+   ============================================================ */
+let bulkMode='drop';
+
+// Fuzzy match: given a user-typed name, return top-N COMPANIES with best score.
+// Handles: exact-substring, token overlap, prefix match, and typo similarity.
+function fuzzyMatchCompany(userName, topN){
+  const u=(userName||'').toLowerCase().trim();
+  if(!u) return [];
+  const uTokens=u.split(/\s+/).filter(Boolean);
+  const scored=COMPANIES.map(c=>{
+    const cn=c.n.toLowerCase();
+    const cTokens=cn.split(/\s+/).filter(Boolean);
+    let score=0;
+    // Full-string containment
+    if(cn.includes(u)||u.includes(cn)) score+=2;
+    // Token-level checks
+    for(const t of uTokens){
+      if(cn.includes(t)) score+=1;
+      if(cTokens.some(ct=>ct.startsWith(t)||t.startsWith(ct))) score+=0.3;
+    }
+    for(const ct of cTokens){
+      if(u.includes(ct)) score+=0.5;
+    }
+    // Typo similarity — for each user token, find closest company token
+    for(const t of uTokens){
+      if(t.length<3) continue;
+      let best=0;
+      for(const ct of cTokens){
+        if(Math.abs(t.length-ct.length)>2) continue;
+        const sim=stringSimilarity(t, ct);
+        if(sim>best) best=sim;
+      }
+      // Boost only if similarity is high (typo threshold)
+      if(best>=0.6) score+=best*1.2;
+    }
+    return {co:c, score};
+  }).filter(x=>x.score>=0.7); // minimum threshold to avoid noise
+  scored.sort((a,b)=>b.score-a.score);
+  return scored.slice(0, topN||3).map(x=>x.co);
+}
+
+// Levenshtein-based similarity: 1 = identical, 0 = completely different.
+function stringSimilarity(a, b){
+  if(a===b) return 1;
+  const maxLen=Math.max(a.length, b.length);
+  if(maxLen===0) return 1;
+  return 1 - (editDistance(a,b) / maxLen);
+}
+function editDistance(a, b){
+  const dp=Array(b.length+1).fill(0).map((_,i)=>i);
+  for(let i=1;i<=a.length;i++){
+    let prev=dp[0]; dp[0]=i;
+    for(let j=1;j<=b.length;j++){
+      const tmp=dp[j];
+      dp[j] = a[i-1]===b[j-1] ? prev : 1+Math.min(prev, dp[j-1], dp[j]);
+      prev=tmp;
+    }
+  }
+  return dp[b.length];
+}
+
+// --- LOCATION FUZZY MATCHING ---
+// Precomputed lowercase list + set for O(1) exact lookup
+const LOCATIONS_LC = LOCATIONS.map(l=>l.toLowerCase());
+const LOCATIONS_SET = new Set(LOCATIONS_LC);
+
+// Returns {exact:bool, suggestion:string|null}
+// - exact = true → location matches a known one (case-insensitive)
+// - suggestion = closest known location if similarity >= 0.75, else null (treated as custom/OK)
+function checkLocation(loc){
+  if(!loc) return {exact:true, suggestion:null};
+  const q=loc.toLowerCase().trim();
+  if(!q) return {exact:true, suggestion:null};
+  if(LOCATIONS_SET.has(q)) return {exact:true, suggestion:null};
+  const qLen=q.length;
+  let best={sim:0, name:null};
+  for(let i=0;i<LOCATIONS_LC.length;i++){
+    const cand=LOCATIONS_LC[i];
+    // Length pre-filter to skip obviously distant candidates
+    if(Math.abs(cand.length-qLen) > Math.max(3, qLen*0.5)) continue;
+    // Substring inclusion — very high confidence
+    if(cand.includes(q)||q.includes(cand)){
+      const sim=Math.min(q.length, cand.length)/Math.max(q.length, cand.length);
+      if(sim>best.sim){ best={sim, name:LOCATIONS[i]}; }
+      continue;
+    }
+    const sim=stringSimilarity(q, cand);
+    if(sim>best.sim){ best={sim, name:LOCATIONS[i]}; }
+  }
+  if(best.sim>=0.75) return {exact:false, suggestion:best.name};
+  return {exact:false, suggestion:null}; // unknown — treat as OK (custom location)
+}
+
+// Called from suggestion click — replaces "@OldName" line with "@NewName" in the paste box.
+function bulkApplySuggestion(oldName, newName){
+  const ta=document.getElementById('bulk-box');
+  const lines=ta.value.split('\n');
+  // Find first line matching "@oldName" (case-insensitive, trimmed)
+  const target='@'+oldName.toLowerCase().trim();
+  for(let i=0;i<lines.length;i++){
+    if(lines[i].trim().toLowerCase()===target){
+      // Preserve any prefix whitespace
+      const prefix=lines[i].match(/^\s*/)[0];
+      lines[i]=prefix+'@'+newName;
+      break;
+    }
+  }
+  ta.value=lines.join('\n');
+  bulkPreview();
+}
+
+// Replace occurrences of a mis-spelled location with the corrected name.
+// Only replaces the location text portion (before employee count), preserving numbers.
+function bulkFixLocation(origLoc, newLoc){
+  const ta=document.getElementById('bulk-box');
+  const lines=ta.value.split('\n');
+  const origLC=origLoc.toLowerCase().trim();
+  let replaced=0;
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    if(line.trim().startsWith('@')) continue; // skip company headers
+    // Match: "<location> <num> [<num>]" — replace the location portion
+    // Try patterns from parser
+    // "loc num num" (with guard)
+    let m=line.match(/^(\s*)(.+?)(\s+\d+\s+\d+\s*)$/);
+    if(m && m[2].trim().toLowerCase()===origLC){
+      lines[i]=m[1]+newLoc+m[3];
+      replaced++; continue;
+    }
+    // "loc - num" or "loc num"
+    m=line.match(/^(\s*)(.+?)(\s*[-\u2013]\s*\d+\s*)$/) || line.match(/^(\s*)(.+?)(\s+\d+\s*)$/);
+    if(m && m[2].trim().toLowerCase()===origLC){
+      lines[i]=m[1]+newLoc+m[3];
+      replaced++; continue;
+    }
+  }
+  ta.value=lines.join('\n');
+  bulkPreview();
+}
+
+// Fix all location typos across all companies in one click.
+function bulkFixAllLocations(){
+  const blocks=bulkParse();
+  const allFixes=[];
+  for(const b of blocks){
+    if(b.locSuggestions) allFixes.push(...b.locSuggestions);
+  }
+  // Dedupe by orig
+  const seen=new Set();
+  const unique=allFixes.filter(f=>{const k=f.orig.toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
+  for(const f of unique) bulkFixLocation(f.orig, f.sugg);
+  if(unique.length){
+    bulkSuccess('Fixed '+unique.length+' location typo'+(unique.length>1?'s':''), []);
+  }
+}
+
+function bulkInit(){
+  const d=document.getElementById('bulk-date');
+  if(!d.value) d.value=new Date().toISOString().slice(0,10);
+  bulkPreview();
+}
+
+function bulkSetMode(m){
+  bulkMode=m;
+  document.getElementById('bulk-mode-drop').classList.toggle('active', m==='drop');
+  document.getElementById('bulk-mode-pickup').classList.toggle('active', m==='pickup');
+  bulkPreview();
+}
+
+function bulkInsertExample(){
+  document.getElementById('bulk-box').value=
+    '@MAERSK\n1930\nTalawade 5\nNigdi 3\nWakad 2 1\n\n'+
+    '@AVALARA\n1730\nKharadi 4\nViman Nagar 6\n\n'+
+    '@HCL EON\n2000\nHadapsar 3\nMagarpatta 5';
+  bulkPreview();
+}
+
+// Parse the bulk box into blocks: [{name, coMatched, rows, timings, empTotal, warnings}]
+function bulkParse(){
+  const raw=document.getElementById('bulk-box').value;
+  const lines=raw.split('\n');
+  const blocks=[];
+  let cur=null;
+  let buffer=[];
+
+  const flush=()=>{
+    if(cur){
+      const {rows}=parseLinesToRows(buffer.join('\n'));
+      cur.rows=rows;
+      cur.buffer=buffer.slice();
+      blocks.push(cur);
+    }
+    buffer=[];
+  };
+
+  for(const line of lines){
+    const t=line.trim();
+    const m=t.match(/^@\s*(.+)$/);
+    if(m){
+      flush();
+      const name=m[1].trim();
+      const co=COMPANIES.find(c=>c.n.toLowerCase()===name.toLowerCase());
+      // If no exact match, find fuzzy suggestions
+      const suggestions = co ? [] : fuzzyMatchCompany(name, 3);
+      cur={name, co: co||null, suggestions};
+    }else{
+      if(cur) buffer.push(line);
+      // lines before first @ are ignored
+    }
+  }
+  flush();
+
+  // Post-process: compute timings, totals, warnings, location suggestions
+  for(const b of blocks){
+    b.timings=[...new Set((b.rows||[]).map(r=>r.timing).filter(Boolean))];
+    b.empTotal=(b.rows||[]).reduce((s,r)=>s+(r.emp||0),0);
+    b.guardTotal=(b.rows||[]).filter(r=>r.escort>0).length;
+    b.warnings=[];
+
+    // Check each row's location for typos
+    b.locSuggestions=[];
+    if(b.rows){
+      for(const r of b.rows){
+        const chk=checkLocation(r.loc);
+        r.locChk=chk;
+        if(chk.suggestion) b.locSuggestions.push({orig:r.loc, sugg:chk.suggestion});
+      }
+    }
+
+    if(!b.co) b.warnings.push('Company "'+b.name+'" not found in list');
+    if(!b.rows || !b.rows.length) b.warnings.push('No locations');
+    if(b.rows && b.rows.some(r=>!r.timing)) b.warnings.push('Some locations have no timing set');
+    // duplicate location check
+    const seen={}, dups=[];
+    (b.rows||[]).forEach(r=>{const k=(r.loc||'').toLowerCase();if(k){if(seen[k])dups.push(r.loc);seen[k]=1;}});
+    if(dups.length) b.warnings.push('Duplicate: '+[...new Set(dups)].join(', '));
+  }
+  return blocks;
+}
+
+function bulkPreview(){
+  const blocks=bulkParse();
+  const wrap=document.getElementById('bulk-preview');
+  const hint=document.getElementById('bulk-hint');
+  const warnBox=document.getElementById('bulk-warn');
+
+  if(!blocks.length){
+    wrap.innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px;text-align:center;border:1px dashed var(--border);border-radius:10px;">No companies yet. Start a line with <code>@CompanyName</code>.</div>';
+    hint.className='parse-hint';
+    hint.textContent='↑ Paste companies above — preview updates live';
+    warnBox.style.display='none';
+    document.getElementById('bulk-total').textContent='';
+    return;
+  }
+
+  const isPickup=bulkMode==='pickup';
+  let totalRows=0, totalEmp=0, allWarnings=[];
+
+  wrap.innerHTML=blocks.map((b,i)=>{
+    const n=(b.rows||[]).length;
+    totalRows+=n; totalEmp+=b.empTotal;
+    if(b.warnings.length) allWarnings.push(...b.warnings);
+    const okColor=b.warnings.length?'var(--warn)':'var(--green)';
+    const border=b.warnings.length?'var(--warn)':'var(--border)';
+    const locList=(b.rows||[]).slice(0,6).map(r=>{
+      const bg = r.locChk && r.locChk.suggestion ? 'var(--warnbg)' : 'var(--surface2)';
+      const color = r.locChk && r.locChk.suggestion ? 'var(--warn)' : 'inherit';
+      const title = r.locChk && r.locChk.suggestion ? 'title="Did you mean: '+r.locChk.suggestion+'"' : '';
+      return '<span '+title+' style="display:inline-block;background:'+bg+';color:'+color+';border-radius:5px;padding:1px 7px;margin:2px 3px 0 0;font-size:11px;'+(r.locChk&&r.locChk.suggestion?'border:1px solid var(--warn);':'')+'">'+
+        (r.loc||'?')+' <b>'+r.emp+'</b>'+(r.escort>0?' <span style="color:var(--purple)">+G</span>':'')+
+      '</span>';
+    }).join('')+((b.rows||[]).length>6?'<span style="font-size:11px;color:var(--text3)"> +'+((b.rows.length-6))+' more</span>':'');
+
+    // "Did you mean" location suggestions (typo fixes)
+    const escLoc=(s)=>String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const locSugHtml = (b.locSuggestions && b.locSuggestions.length) ?
+      '<div style="margin-top:6px;font-size:11px;color:var(--text2);padding-top:6px;border-top:1px dashed var(--border);">'+
+        '📍 Location fixes: '+
+        b.locSuggestions.map(ls =>
+          '<button onclick="bulkFixLocation(\''+escLoc(ls.orig)+'\',\''+escLoc(ls.sugg)+'\')" '+
+          'style="display:inline-block;background:var(--warnbg);color:var(--warn);border:1px solid var(--warn);border-radius:12px;padding:2px 10px;margin:2px 3px 0 0;font-size:11px;font-family:var(--mono);cursor:pointer;font-weight:600;" '+
+          'title="Click to fix in paste box">'+ls.orig+' → '+ls.sugg+'</button>'
+        ).join('')+
+        (b.locSuggestions.length>1 ? ' <button onclick="bulkFixAllLocations()" style="background:var(--green);color:#fff;border:none;border-radius:12px;padding:2px 10px;margin:2px 3px 0 0;font-size:11px;font-family:var(--mono);cursor:pointer;font-weight:600;">✓ Fix all</button>' : '')+
+      '</div>' : '';
+
+    // "Did you mean" suggestions (only when company not found)
+    const escName=(s)=>String(s).replace(/'/g,"\\'");
+    const sugHtml = (!b.co && b.suggestions && b.suggestions.length) ?
+      '<div style="margin-top:6px;font-size:11px;color:var(--text2);">'+
+        '💡 Did you mean: '+
+        b.suggestions.map(s=>
+          '<button onclick="bulkApplySuggestion(\''+escName(b.name)+'\',\''+escName(s.n)+'\')" '+
+          'style="display:inline-block;background:var(--accentbg);color:var(--accent);border:1px solid rgba(10,110,245,0.3);border-radius:12px;padding:2px 10px;margin:2px 3px 0 0;font-size:11px;font-family:var(--mono);cursor:pointer;font-weight:600;" '+
+          'title="Click to use this company">'+s.n+'</button>'
+        ).join('')+
+      '</div>' : '';
+
+    return '<div style="border:1px solid '+border+';border-radius:10px;padding:11px 13px;background:var(--surface);">'+
+      '<div style="display:flex;align-items:center;gap:8px;">'+
+        '<span style="width:22px;height:22px;border-radius:50%;background:var(--accentbg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;font-family:var(--mono);">'+(i+1)+'</span>'+
+        '<span style="font-weight:600;font-size:14px;">'+b.name+'</span>'+
+        (b.co?'':'<span style="font-size:10px;background:var(--dangerbg);color:var(--danger);padding:1px 7px;border-radius:8px;">not found</span>')+
+        '<span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:'+okColor+';">'+n+' loc · '+b.empTotal+' emp</span>'+
+      '</div>'+
+      '<div style="margin-top:6px;font-size:11px;color:var(--text3);">Timing: '+(b.timings.length?b.timings.join(', '):'<span style="color:var(--danger)">none</span>')+(b.guardTotal?' · Guards: '+b.guardTotal:'')+'</div>'+
+      '<div style="margin-top:5px;">'+locList+'</div>'+
+      sugHtml+
+      locSugHtml+
+      (b.warnings.length?'<div style="margin-top:6px;font-size:11px;color:var(--warn);">⚠ '+b.warnings.join(' · ')+'</div>':'')+
+    '</div>';
+  }).join('');
+
+  hint.className='parse-hint active';
+  hint.textContent='✅ '+blocks.length+' companies · '+totalRows+' locations · '+totalEmp+' employees';
+  document.getElementById('bulk-total').textContent=blocks.length+' companies · '+totalRows+' rows';
+
+  if(allWarnings.length){
+    warnBox.style.display='block';
+    warnBox.innerHTML='<strong>⚠ '+allWarnings.length+' issue(s):</strong> '+[...new Set(allWarnings)].join(' · ');
+  }else{
+    warnBox.style.display='none';
+  }
+}
+
+// Build per-company CSVs. Returns {results:[{company,csv,filename,rows}], skipped:[names], totalRows}
+function bulkBuildAll(){
+  const blocks=bulkParse();
+  const ds=document.getElementById('bulk-date').value;
+  const tt=document.getElementById('bulk-triptype').value||5;
+  const isPickup=bulkMode==='pickup';
+  if(!ds){ alert('Please set a date.'); return null; }
+
+  const results=[], skipped=[];
+  let totalRows=0;
+  for(const b of blocks){
+    if(!b.co){ skipped.push(b.name+' (not found)'); continue; }
+    if(!b.rows || !b.rows.length){ skipped.push(b.name+' (no locations)'); continue; }
+    const rows=b.rows.map(r=>({...r, source:'paste'}));
+    const dataRows=buildDataRows(b.co, rows, isPickup, ds, tt, null);
+    if(!dataRows.length){ skipped.push(b.name+' (no valid timing)'); continue; }
+    const csv=rowsToCSV(CSV_COLS, dataRows);
+    const tv=b.timings[0]||'';
+    const filename=(isPickup?'pickup_':'drop_')+b.co.n.replace(/\s+/g,'_')+'_'+tv+'_'+ds+'.csv';
+    results.push({company:b.co.n, csv, dataRows, filename, rows:dataRows.length, mode:isPickup?'pickup':'drop', timing:tv, date:ds});
+    totalRows+=dataRows.length;
+  }
+  return {results, skipped, totalRows, ds, isPickup};
+}
+
+function bulkValidateOrAlert(built){
+  if(!built) return false;
+  if(!built.results.length){
+    alert('No valid company data to export.'+(built.skipped.length?'\n\nSkipped:\n'+built.skipped.join('\n'):''));
+    return false;
+  }
+  return true;
+}
+
+// Merge all companies' data rows into one big 2D array (no per-company duplication of header).
+function bulkAllDataRows(built){
+  const all=[];
+  for(const r of built.results) for(const dr of r.dataRows) all.push(dr);
+  return all;
+}
+
+function bulkDownloadCombined(){
+  const built=bulkBuildAll();
+  if(!bulkValidateOrAlert(built)) return;
+  const csv=rowsToCSV(CSV_COLS, bulkAllDataRows(built));
+  const fn=(built.isPickup?'pickup':'drop')+'_BULK_'+built.results.length+'companies_'+built.ds+'.csv';
+  bulkTriggerDownload(csv, fn, 'text/csv;charset=utf-8;');
+  built.results.forEach(r=>logTrip(r,'bulk-combined'));
+  bulkSuccess(built.results.length+' companies · '+built.totalRows+' rows → '+fn, built.skipped);
+}
+
+function bulkCopyCombined(){
+  const built=bulkBuildAll();
+  if(!bulkValidateOrAlert(built)) return;
+  // TSV pastes correctly into Excel/Sheets (each column → separate cell)
+  const tsv=rowsToTSV(CSV_COLS, bulkAllDataRows(built));
+  const done=()=>{
+    const btn=document.getElementById('bulk-copy-btn');const o=btn.innerHTML;btn.innerHTML='✅ Copied!';setTimeout(()=>btn.innerHTML=o,2000);
+    built.results.forEach(r=>logTrip(r,'bulk-copy'));
+    bulkSuccess(built.results.length+' companies copied · '+built.totalRows+' rows — paste into Excel/Sheet', built.skipped);
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(tsv).then(done).catch(()=>fallbackCopy(tsv,done));
+  }else fallbackCopy(tsv,done);
+}
+
+function bulkDownloadSeparate(){
+  const built=bulkBuildAll();
+  if(!bulkValidateOrAlert(built)) return;
+
+  if(typeof JSZip!=='undefined'){
+    const zip=new JSZip();
+    built.results.forEach(r=>zip.file(r.filename, r.csv));
+    zip.generateAsync({type:'blob'}).then(blob=>{
+      const fn=(built.isPickup?'pickup':'drop')+'_BULK_'+built.results.length+'files_'+built.ds+'.zip';
+      bulkTriggerDownload(blob, fn, null, true);
+      built.results.forEach(r=>logTrip(r,'bulk-separate'));
+      bulkSuccess(built.results.length+' CSV files zipped → '+fn, built.skipped);
+    }).catch(()=>bulkSeparateFallback(built));
+  }else{
+    bulkSeparateFallback(built);
+  }
+}
+
+// If JSZip unavailable, download each file individually (staggered).
+function bulkSeparateFallback(built){
+  built.results.forEach((r,i)=>{
+    setTimeout(()=>{
+      bulkTriggerDownload(r.csv, r.filename, 'text/csv;charset=utf-8;');
+      logTrip(r,'bulk-separate');
+    }, i*400);
+  });
+  bulkSuccess(built.results.length+' files downloading individually (ZIP unavailable)', built.skipped);
+}
+
+function bulkTriggerDownload(data, filename, mime, isBlob){
+  const blob=isBlob?data:new Blob([data],{type:mime});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function bulkSuccess(text, skipped){
+  const msg=document.getElementById('bulk-success');
+  let t=text;
+  if(skipped&&skipped.length) t+=' · ⚠ Skipped: '+skipped.join(', ');
+  document.getElementById('bulk-success-detail').textContent=t;
+  msg.style.display='flex';setTimeout(()=>{msg.style.display='none';},6000);
+}
+
+/* ============================================================
+   ADMIN PANEL LOGIC
+   ============================================================ */
+
+// --- Hidden access: tap the logo 5 times to reveal Admin tab ---
+(function(){
+  let taps=0, timer=null;
+  const logo=document.querySelector('.logo');
+  if(logo){
+    logo.style.cursor='pointer';
+    logo.addEventListener('click', function(){
+      taps++;
+      clearTimeout(timer);
+      timer=setTimeout(()=>{taps=0;}, 1500);
+      if(taps>=5){
+        taps=0;
+        const t=document.getElementById('tab-admin');
+        t.style.display='flex';
+        switchMode('admin');
+      }
+    });
+  }
+  // Also allow #admin in the URL
+  if(location.hash==='#admin'){
+    const t=document.getElementById('tab-admin');
+    if(t){ t.style.display='flex'; }
+  }
+})();
+
+function adminSubTab(which){
+  document.getElementById('adm-sub-dash').classList.toggle('active', which==='dash');
+  document.getElementById('adm-sub-comp').classList.toggle('active', which==='comp');
+  document.getElementById('admin-dash-section').style.display = which==='dash' ? 'block' : 'none';
+  document.getElementById('admin-comp-section').style.display = which==='comp' ? 'block' : 'none';
+  if(which==='comp') adminRenderCompanies();
+}
+
+function adminRefresh(){
+  // Sync badge
+  const badge=document.getElementById('admin-sync-badge');
+  if(TRIP_LOG_URL){
+    badge.textContent='Google Sheet connected';
+    badge.style.background='var(--greenbg)';
+    badge.style.color='var(--green)';
+  }else{
+    badge.textContent='Local storage only (this device)';
+    badge.style.background='var(--warnbg)';
+    badge.style.color='var(--warn)';
+  }
+  adminRenderDashboard();
+  adminRenderCompanies();
+}
+
+function adminRenderDashboard(){
+  const log=getLocalLog();
+
+  // --- Summary cards ---
+  const totalTrips=log.length;
+  const totalRows=log.reduce((s,e)=>s+(e.rows||0),0);
+  const companies=new Set(log.map(e=>e.company)).size;
+  const today=new Date().toISOString().slice(0,10);
+  const todayTrips=log.filter(e=>(e.ts||'').slice(0,10)===today).length;
+  const cards=[
+    {num:totalTrips, lbl:'Total Trips Generated'},
+    {num:todayTrips, lbl:'Trips Today'},
+    {num:totalRows, lbl:'Total Rows'},
+    {num:companies, lbl:'Companies Used'}
+  ];
+  document.getElementById('admin-stat-cards').innerHTML =
+    cards.map(c=>'<div class="admin-stat-card"><div class="num">'+c.num+'</div><div class="lbl">'+c.lbl+'</div></div>').join('');
+
+  // --- Per-company breakdown ---
+  const byCo={};
+  for(const e of log){
+    const k=e.company||'—';
+    if(!byCo[k]) byCo[k]={trips:0,rows:0,pickup:0,drop:0,last:''};
+    byCo[k].trips++;
+    byCo[k].rows+=(e.rows||0);
+    if(e.mode==='pickup') byCo[k].pickup++; else byCo[k].drop++;
+    if((e.ts||'')>byCo[k].last) byCo[k].last=e.ts||'';
+  }
+  const coRows=Object.entries(byCo).sort((a,b)=>b[1].trips-a[1].trips);
+  const coBody=document.getElementById('admin-company-tbody');
+  if(!coRows.length){
+    coBody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px;">No trips logged yet. Generate a CSV to see stats here.</td></tr>';
+  }else{
+    coBody.innerHTML=coRows.map(([name,d],i)=>
+      '<tr><td>'+(i+1)+'</td><td style="font-weight:600">'+name+'</td><td>'+d.trips+'</td><td>'+d.rows+
+      '</td><td style="color:var(--accent)">'+d.pickup+'</td><td style="color:var(--green)">'+d.drop+
+      '</td><td style="color:var(--text3);font-size:12px">'+(d.last?fmtLogDate(d.last):'—')+'</td></tr>'
+    ).join('');
+  }
+
+  // --- Daily history ---
+  const byDate={};
+  for(const e of log){
+    const k=(e.ts||'').slice(0,10)||'—';
+    if(!byDate[k]) byDate[k]={trips:0,rows:0,cos:new Set()};
+    byDate[k].trips++;
+    byDate[k].rows+=(e.rows||0);
+    byDate[k].cos.add(e.company);
+  }
+  const dateRows=Object.entries(byDate).sort((a,b)=>b[0].localeCompare(a[0]));
+  const dateBody=document.getElementById('admin-date-tbody');
+  if(!dateRows.length){
+    dateBody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:20px;">No history yet.</td></tr>';
+  }else{
+    dateBody.innerHTML=dateRows.map(([date,d])=>
+      '<tr><td style="font-weight:600">'+date+'</td><td>'+d.trips+'</td><td>'+d.rows+'</td><td style="color:var(--text3);font-size:12px">'+[...d.cos].join(', ')+'</td></tr>'
+    ).join('');
+  }
+}
+
+function fmtLogDate(iso){
+  try{
+    const d=new Date(iso);
+    return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){ return iso.slice(0,16).replace('T',' '); }
+}
+
+// --- Company management UI ---
+function adminRenderCompanies(){
+  rebuildCompanies();
+  const ov=getCompanyOverrides();
+  const q=(document.getElementById('comp-search').value||'').toLowerCase().trim();
+  const list=COMPANIES.filter(c=>!q||c.n.toLowerCase().includes(q)||(c.a||'').toLowerCase().includes(q));
+  document.getElementById('comp-count').textContent=COMPANIES.length;
+  const body=document.getElementById('admin-complist-tbody');
+  const baseKeys=new Set(BASE_COMPANIES.map(c=>c.n.toLowerCase()));
+  if(!list.length){
+    body.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px;">No companies match.</td></tr>';
+    return;
+  }
+  body.innerHTML=list.map((c,i)=>{
+    const key=c.n.toLowerCase();
+    const isCustom = !baseKeys.has(key) || (ov[key]&&!ov[key].deleted);
+    const src = !baseKeys.has(key) ? '<span class="src-tag custom">Added</span>'
+              : (ov[key] ? '<span class="src-tag custom">Edited</span>' : '<span class="src-tag base">Built-in</span>');
+    const safe = s => String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    return '<tr>'+
+      '<td>'+(i+1)+'</td>'+
+      '<td style="font-weight:600">'+c.n+'</td>'+
+      '<td>'+c.p+'</td>'+
+      '<td style="font-size:12px">'+c.e+'</td>'+
+      '<td style="font-size:12px;max-width:320px;white-space:normal">'+c.a+'</td>'+
+      '<td>'+src+'</td>'+
+      '<td style="white-space:nowrap">'+
+        '<button class="comp-act-btn edit" onclick="adminEditCompany(\''+safe(c.n)+'\')">Edit</button>'+
+        '<button class="comp-act-btn del" onclick="adminDeleteCompany(\''+safe(c.n)+'\')">Delete</button>'+
+      '</td></tr>';
+  }).join('');
+}
+
+function adminEditCompany(name){
+  const c=COMPANIES.find(x=>x.n===name);
+  if(!c) return;
+  document.getElementById('comp-form-title').textContent='✏️ Edit Company';
+  document.getElementById('comp-edit-key').value=c.n.toLowerCase();
+  document.getElementById('comp-f-name').value=c.n;
+  document.getElementById('comp-f-phone').value=c.p;
+  document.getElementById('comp-f-email').value=c.e;
+  document.getElementById('comp-f-addr').value=c.a;
+  document.getElementById('admin-comp-section').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function adminResetCompanyForm(){
+  document.getElementById('comp-form-title').textContent='➕ Add New Company';
+  document.getElementById('comp-edit-key').value='';
+  document.getElementById('comp-f-name').value='';
+  document.getElementById('comp-f-phone').value='';
+  document.getElementById('comp-f-email').value='';
+  document.getElementById('comp-f-addr').value='';
+}
+
+function adminSaveCompany(){
+  const name=document.getElementById('comp-f-name').value.trim();
+  const phone=document.getElementById('comp-f-phone').value.trim();
+  const email=document.getElementById('comp-f-email').value.trim();
+  const addr=document.getElementById('comp-f-addr').value.trim();
+  const editKey=document.getElementById('comp-edit-key').value;
+  if(!name){ alert('Company name is required.'); return; }
+  if(!phone){ alert('Phone number is required.'); return; }
+
+  const ov=getCompanyOverrides();
+  const newKey=name.toLowerCase();
+
+  // If renamed while editing, remove the old override entry
+  if(editKey && editKey!==newKey){
+    // If old was a built-in, mark it deleted so it doesn't duplicate
+    if(BASE_COMPANIES.some(c=>c.n.toLowerCase()===editKey)){
+      ov[editKey]={deleted:true};
+    }else{
+      delete ov[editKey];
+    }
+  }
+
+  ov[newKey]={n:name, p:phone, e:email||(name.toLowerCase().replace(/\s+/g,'')+'@gmail.com'), a:addr};
+  saveCompanyOverrides(ov);
+  rebuildCompanies();
+  adminResetCompanyForm();
+  adminRenderCompanies();
+  showSuccess('Company saved: '+name);
+}
+
+function adminDeleteCompany(name){
+  if(!confirm('Delete "'+name+'"? This removes it from the company dropdown.')) return;
+  const ov=getCompanyOverrides();
+  const key=name.toLowerCase();
+  if(BASE_COMPANIES.some(c=>c.n.toLowerCase()===key)){
+    ov[key]={deleted:true};       // hide built-in
+  }else{
+    delete ov[key];               // remove custom
+  }
+  saveCompanyOverrides(ov);
+  rebuildCompanies();
+  adminRenderCompanies();
+  showSuccess('Company deleted: '+name);
+}
+
+function adminExportLog(){
+  const log=getLocalLog();
+  if(!log.length){ alert('No log entries to export.'); return; }
+  const cols=['Timestamp','Company','Rows','Mode','Timing','Date','Action'];
+  const esc=v=>{const s=String(v??'');return(s.includes(',')||s.includes('"'))?'"'+s.replace(/"/g,'""')+'"':s;};
+  const rows=log.map(e=>[e.ts,e.company,e.rows,e.mode,e.timing,e.date,e.action].map(esc).join(','));
+  const csv=[cols.join(','),...rows].join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='ptrack_trip_log_'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
 
 </script>
 </body>
