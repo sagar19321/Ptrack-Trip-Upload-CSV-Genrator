@@ -1124,20 +1124,19 @@ function getCalc(){
 
   if(currentMode==='pickup'){
     // PICKUP: Delivery = timing (arrival at company), Pickup = timing − 1:30 hr
+    // If pickup would be at/before midnight → keep same day, set to 00:01 (never go to previous day)
     const pickMin=th*60+tm-90;
-    const pickMinMod=((pickMin%1440)+1440)%1440;
-    const ph=Math.floor(pickMinMod/60),pm=pickMinMod%60;
-    const dp=pickMin<0?new Date(d.getTime()-86400000):d;
+    let ph,pm;
+    if(pickMin<=0){ph=0;pm=1;}else{ph=Math.floor(pickMin/60);pm=pickMin%60;}
     const ll=1; // Pickup → always 1
-    return{pickup:fmtDT(dp,ph,pm),delivery:fmtDT(d,th,tm),shift,ll,tv};
+    return{pickup:fmtDT(d,ph,pm),delivery:fmtDT(d,th,tm),shift,ll,tv};
   }else{
     // DROP: Pickup = timing, Delivery = timing + 1:30 hr
-    // SPECIAL: 2230 → Delivery 23:30 (same day); 2300 → Delivery 23:45 (same day); 2330 → Delivery 23:45 (same day)
+    // If delivery crosses midnight → keep same day: 22:xx pickup → 23:30, 23:xx pickup → 23:45
     let dh,dm,dn;
-    if(th===22&&tm===30){dh=23;dm=30;dn=d;}
-    else if(th===23&&tm===0){dh=23;dm=45;dn=d;}
-    else if(th===23&&tm===30){dh=23;dm=45;dn=d;}
-    else{const delMin=th*60+tm+90;dh=Math.floor(delMin/60)%24;dm=delMin%60;dn=delMin>=1440?new Date(d.getTime()+86400000):d;}
+    const delMin=th*60+tm+90;
+    if(delMin>=1440){dn=d;if(th===22){dh=23;dm=30;}else{dh=23;dm=45;}}
+    else{dh=Math.floor(delMin/60);dm=delMin%60;dn=d;}
     const ll=2; // Drop → always 2
     return{pickup:fmtDT(d,th,tm),delivery:fmtDT(dn,dh,dm),shift,ll,tv};
   }
@@ -1283,12 +1282,12 @@ function calcForTiming(tv, ds, opts){
 
   if(currentMode==='pickup'){
     // PICKUP: Delivery = timing (arrival at company), Pickup = timing − 1:30 hr
+    // If pickup would be at/before midnight → keep same day, set to 00:01 (never go to previous day)
     const pickMin=th*60+tm-90;
-    const pickMinMod=((pickMin%1440)+1440)%1440;
-    const ph=Math.floor(pickMinMod/60),pm=pickMinMod%60;
-    const dp=pickMin<0?new Date(d.getTime()-86400000):d;
+    let ph,pm;
+    if(pickMin<=0){ph=0;pm=1;}else{ph=Math.floor(pickMin/60);pm=pickMin%60;}
     const ll=1; // Pickup → always 1
-    return{pickup:fmtDT(dp,ph,pm),delivery:fmtDT(d,th,tm),shift,ll,tv};
+    return{pickup:fmtDT(d,ph,pm),delivery:fmtDT(d,th,tm),shift,ll,tv};
   }else{
     // DROP: Pickup = timing, Delivery = timing + 1:30 hr
     // SPECIAL (Gallagher Summary upload ONLY, not used anywhere else): 2345 → Pickup 00:01 / Delivery 01:30, next day
@@ -1297,12 +1296,11 @@ function calcForTiming(tv, ds, opts){
       const ll=2;
       return{pickup:fmtDT(dn,0,1),delivery:fmtDT(dn,1,30),shift,ll,tv:'0000'};
     }
-    // SPECIAL: 2230 → Delivery 23:30 (same day); 2300 → Delivery 23:45 (same day); 2330 → Delivery 23:45 (same day)
+    // If delivery crosses midnight → keep same day: 22:xx pickup → 23:30, 23:xx pickup → 23:45
     let dh,dm,dn;
-    if(th===22&&tm===30){dh=23;dm=30;dn=d;}
-    else if(th===23&&tm===0){dh=23;dm=45;dn=d;}
-    else if(th===23&&tm===30){dh=23;dm=45;dn=d;}
-    else{const delMin=th*60+tm+90;dh=Math.floor(delMin/60)%24;dm=delMin%60;dn=delMin>=1440?new Date(d.getTime()+86400000):d;}
+    const delMin=th*60+tm+90;
+    if(delMin>=1440){dn=d;if(th===22){dh=23;dm=30;}else{dh=23;dm=45;}}
+    else{dh=Math.floor(delMin/60);dm=delMin%60;dn=d;}
     const ll=2; // Drop → always 2
     return{pickup:fmtDT(d,th,tm),delivery:fmtDT(dn,dh,dm),shift,ll,tv};
   }
