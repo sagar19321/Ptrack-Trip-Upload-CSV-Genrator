@@ -1605,7 +1605,7 @@ function buildDataRows(co, rows, isPickup, ds, tt, fallbackCalc){
     const orderId      = isPickup ? pStreetAddr : (isExcel ? r.locationName : r.loc);
     return [
       '', '', co.n, streetAddr, 'Pune', ',', 'India', '', '', co.p,
-      rc.delivery, '', '1', '', merchantName, pStreetAddr, 'Pune', ',', 'India', '', '',
+      rc.delivery, '', '0', '', merchantName, pStreetAddr, 'Pune', ',', 'India', '', '',
       co.p, rc.pickup, orderId, orderId, '', rc.shift, isPickup ? '1' : '2', tt, r.emp, '', r.escort
     ];
   }).filter(Boolean);
