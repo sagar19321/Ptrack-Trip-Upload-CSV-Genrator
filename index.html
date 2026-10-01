@@ -200,6 +200,19 @@
   .btn-pickup:hover{background:#6d28d9;}
   .btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
   .btn-secondary:hover{color:var(--text);border-color:var(--text3);}
+  .btn-combo{background:#16a34a;color:#fff;box-shadow:0 1px 4px rgba(22,163,74,0.3);}
+  .btn-combo:hover{background:#15803d;}
+  .combo-bar{display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 16px;margin:0 0 14px 0;font-family:var(--mono);font-size:12px;color:#14532d;}
+  .combo-bar .combo-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .combo-bar .combo-title{font-weight:700;font-size:13px;}
+  .combo-bar .combo-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 6px 4px 12px;font-weight:600;font-size:11.5px;border:1px solid transparent;}
+  .combo-bar .combo-chip.pickup{background:#f3e8ff;color:#6d28d9;border-color:#d8b4fe;}
+  .combo-bar .combo-chip.drop{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd;}
+  .combo-bar .combo-chip b{cursor:pointer;width:18px;height:18px;line-height:17px;text-align:center;border-radius:50%;background:rgba(0,0,0,.08);font-size:13px;}
+  .combo-bar .combo-chip b:hover{background:rgba(0,0,0,.2);}
+  .combo-bar .combo-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+  .combo-bar .combo-hint{margin-top:8px;font-size:11px;color:#166534;opacity:.85;}
+  .pt-csvbar .pt-cb-onewrap{cursor:pointer;}
 
   /* INFO */
   .info-strip{background:var(--accentbg);border:1px solid rgba(10,110,245,0.18);border-radius:9px;padding:9px 14px;font-size:12px;color:var(--text2);line-height:1.7;}
@@ -355,6 +368,17 @@
   #magna-tableWrap tbody tr:hover{background:#eef2ff;}
   #magna-tableWrap td{padding:8px 12px;}
   #magna-tableWrap td.c{text-align:center;}
+
+  /* ── CLEANER → CSV DOWNLOAD BAR ── */
+  .pt-csvbar{display:none;align-items:center;gap:12px;flex-wrap:wrap;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin:0 0 14px 0;font-size:12px;color:#166534;}
+  .pt-csvbar .pt-cb-sum{font-weight:700;}
+  .pt-csvbar label{display:flex;align-items:center;gap:6px;color:#475569;font-size:11px;font-weight:600;}
+  .pt-csvbar input,.pt-csvbar select{border:1px solid #cbd5e1;border-radius:6px;padding:6px 8px;font-size:12px;font-family:var(--mono);background:#fff;color:#0f172a;}
+  .pt-csvbar .pt-cb-co{width:190px;}
+  .pt-csvbar .pt-cb-dl{background:#16a34a;color:#fff;border:none;border-radius:6px;padding:9px 18px;cursor:pointer;font-family:var(--mono);font-size:13px;font-weight:700;}
+  .pt-csvbar .pt-cb-dl:hover{background:#15803d;}
+  .pt-csvbar .pt-cb-msg{flex-basis:100%;font-size:11px;color:#166534;}
+  .pt-csvbar .pt-cb-msg.err{color:#b91c1c;font-weight:600;}
 
   /* ── MAERSK CLEANER TAB ── */
   #maersk-panel{display:none;padding:20px 28px;max-width:1400px;margin:0 auto;}
@@ -863,6 +887,15 @@
       <button class="excel-clear-btn" id="excel-clear-btn" onclick="clearExcelSheet()">✕ Clear Sheet — Upload New</button>
     </div>
 
+    <div id="combo-bar" class="combo-bar">
+      <div class="combo-head"><span class="combo-title">📦 Combined CSV <span id="combo-total"></span></span><span id="combo-chips" style="display:flex;gap:8px;flex-wrap:wrap"></span></div>
+      <div class="combo-actions">
+        <button class="btn btn-combo" onclick="comboDownload()">⬇ Download Combined CSV</button>
+        <button class="btn btn-secondary" onclick="comboCopy()">📋 Copy for Sheet</button>
+        <button class="btn btn-secondary" onclick="comboClear()">✕ Clear all</button>
+      </div>
+      <div class="combo-hint">Rows of the tab you are on are included automatically. Switch to the other tab (Pickup / Drop), enter its locations, then download — Pickup and Drop come in ONE csv.</div>
+    </div>
     <div class="table-wrap">
       <div class="table-header">
         <h3>Preview <span class="mode-tag drop" id="preview-mode-tag">DROP</span></h3>
@@ -870,6 +903,7 @@
         <div style="margin-left:auto;display:flex;gap:8px">
           <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
           <button class="btn btn-secondary" id="copy-btn" onclick="copyCSV()" title="Copy in Excel/Sheet-ready format (each column → separate cell)">📋 Copy for Sheet</button>
+          <button class="btn btn-secondary" id="combo-add-btn" onclick="comboAdd()" title="Keep these rows, then open the other tab (Pickup / Drop) and download ONE combined csv">➕ Add to Combined</button>
           <button class="btn btn-drop" id="dl-btn" onclick="downloadCSV()">⬇ Download CSV</button>
         </div>
       </div>
@@ -1480,30 +1514,188 @@ let inputMode         = 'paste'; // 'paste' or 'excel'
 let excelRows         = [];      // rows parsed from uploaded Excel sheet
 
 // Shared: push cleaner output into the Pickup/Drop "Upload Sheet" (Details)
-function ptFeedDetails(rows, fileName, sourceLabel, mapHtml){
+// Date helper: Date / Excel serial / "30/09/2026" / "29-09-2026" / "2026-09-30" → "YYYY-MM-DD" ('' if unknown)
+window.ptToISO=function(v){
+  if(v==null||v==='') return '';
+  const p=n=>String(n).padStart(2,'0');
+  if(v instanceof Date&&!isNaN(v)){ return v.getFullYear()<2000?'':(v.getFullYear()+'-'+p(v.getMonth()+1)+'-'+p(v.getDate())); }
+  if(typeof v==='number'){
+    if(v<30000||v>80000) return '';
+    const d=new Date(Math.round((Math.floor(v)-25569)*86400000));
+    return d.getUTCFullYear()+'-'+p(d.getUTCMonth()+1)+'-'+p(d.getUTCDate());
+  }
+  const t=String(v).trim(); let m;
+  if((m=t.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/))) return m[3]+'-'+p(m[2])+'-'+p(m[1]);
+  if((m=t.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/))) return m[1]+'-'+p(m[2])+'-'+p(m[3]);
+  return '';
+};
+// Read several Excel files → Promise<[{file, raw}]> (raw = first sheet as rows)
+window.ptReadRaws=function(files,opts){
+  return Promise.all(Array.from(files).map(f=>new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>{try{
+      const wb=XLSX.read(e.target.result,{type:'array',raw:true,cellDates:!!(opts&&opts.cellDates)});
+      res({file:f,raw:XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:null})});
+    }catch(err){rej(err);}};
+    r.onerror=()=>rej(new Error('Could not read '+f.name));
+    r.readAsArrayBuffer(f);
+  })));
+};
+// Auto-fill Company + Date in Trip Settings from what the cleaner found in the file
+function ptApplyMeta(meta){
+  const notes=[];
+  if(!meta) return notes;
+  if(meta.company){
+    const q=String(meta.company).toLowerCase();
+    const c=COMPANIES.find(x=>x.n.toLowerCase()===q)||COMPANIES.find(x=>x.n.toLowerCase().includes(q));
+    if(c){ document.getElementById('company-input').value=c.n; document.getElementById('company-val').value=c.n.toUpperCase(); notes.push('Company: '+c.n); }
+  }
+  if(meta.date&&/^\d{4}-\d{2}-\d{2}$/.test(meta.date)){
+    document.getElementById('trip-date').value=meta.date;
+    notes.push('Date: '+meta.date.split('-').reverse().join('/'));
+  }
+  return notes;
+}
+// Shared: push cleaner output into the Pickup/Drop "Upload Sheet" (Details)
+// rows may carry dir:'Pickup'|'Drop' · meta = {company, date:'YYYY-MM-DD'} (optional auto-fill)
+function ptFeedDetails(rows, fileName, sourceLabel, mapHtml, meta){
   excelRows = rows;
+  window.__ptBatchSrc = sourceLabel;
   if(!excelRows.length) return;
+  const notes = ptApplyMeta(meta);
   const firstTiming = (excelRows.find(r => r.timing) || {}).timing;
   if(firstTiming){
     const ti = document.getElementById('timing-input');
-    if(ti.value !== firstTiming){ ti.value = firstTiming; setTimeout(updateAuto, 0); }
+    if(ti.value !== firstTiming){ ti.value = firstTiming; }
   }
   setInputMode('excel');
+  const nP = excelRows.filter(r=>r.dir==='Pickup').length, nD = excelRows.filter(r=>r.dir==='Drop').length;
+  const split = (nP&&nD) ? ' (' + nP + ' Pickup + ' + nD + ' Drop)' : '';
   const st = document.getElementById('excel-status');
-  st.textContent = '✅ ' + fileName + ' — ' + excelRows.length + ' rows ready';
+  st.textContent = '✅ ' + fileName + ' — ' + excelRows.length + ' rows ready' + split + (notes.length ? ' · ' + notes.join(' · ') : '');
   st.className = 'ok';
   const dz2 = document.getElementById('excel-drop-zone');
   dz2.classList.add('loaded');
   dz2.removeAttribute('for');
   dz2.style.cursor = 'default';
-  document.getElementById('excel-dz-sub').textContent = '✅ ' + excelRows.length + ' rows ready — from ' + sourceLabel;
+  document.getElementById('excel-dz-sub').textContent = '✅ ' + excelRows.length + ' rows ready' + split + ' — from ' + sourceLabel;
   document.getElementById('excel-dz-main').textContent = '📋 ' + fileName;
   document.querySelector('#excel-section .sec-label').textContent = 'Loaded from ' + sourceLabel;
   const cm = document.getElementById('excel-col-map');
   cm.innerHTML = mapHtml;
   cm.classList.add('visible');
   document.getElementById('excel-clear-btn').classList.add('visible');
-  parseAndPreview();
+  updateAuto();
+}
+
+// ───────────── Cleaner tabs: "Download CSV" bar (Pickup + Drop together) ─────────────
+const PT_BAR_PANELS={'cleaner-panel':'Mail Cleaner','nbh-panel':'NBH Cleaner','tiaa-panel':'TIAA Cleaner','avalara-panel':'Avalara Cleaner','maersk-panel':'Maersk Cleaner','magna-panel':'Magna Cleaner','gallagher-panel':'Gallagher Cleaner','mphasis-panel':'Mphasis Cleaner'};
+window.__ptUnkDir='';
+function ptInstallBars(){
+  if(!document.getElementById('pt-co-list')){
+    const dl=document.createElement('datalist'); dl.id='pt-co-list';
+    dl.innerHTML=COMPANIES.map(c=>'<option value="'+c.n.replace(/"/g,'&quot;')+'"></option>').join('');
+    document.body.appendChild(dl);
+  }
+  Object.keys(PT_BAR_PANELS).forEach(pid=>{
+    const panel=document.getElementById(pid);
+    if(!panel||panel.querySelector('.pt-csvbar')) return;
+    const bar=document.createElement('div');
+    bar.className='pt-csvbar'; bar.dataset.src=PT_BAR_PANELS[pid];
+    bar.innerHTML='<span class="pt-cb-sum"></span>'+
+      '<label>Company <input class="pt-cb-co" list="pt-co-list" placeholder="select company" onchange="ptBarCompany(this.value)"></label>'+
+      '<label>Date <input type="date" class="pt-cb-date" onchange="ptBarDate(this.value)"></label>'+
+      '<label class="pt-cb-dirwrap" style="display:none">Type <select class="pt-cb-dir" onchange="window.__ptUnkDir=this.value"><option value="">select…</option><option>Pickup</option><option>Drop</option></select></label>'+
+      '<label class="pt-cb-onewrap" style="display:none" title="Put Pickup and Drop rows into ONE csv file instead of two"><input type="checkbox" class="pt-cb-one" onchange="ptBarOne(this.checked)"> 1 combined CSV</label>'+
+      '<button class="pt-cb-dl" onclick="ptCsvDownload()">⬇ Download CSV</button>'+
+      '<span class="pt-cb-msg"></span>';
+    const anchor=panel.querySelector('.mc-steps');
+    if(anchor&&anchor.parentNode===panel) anchor.insertAdjacentElement('afterend',bar); else panel.insertBefore(bar,panel.children[1]||null);
+  });
+}
+function ptOneCsv(){ try{ return localStorage.getItem('pt_one_csv')==='1'; }catch(e){ return false; } }
+function ptBarOne(v){ try{ localStorage.setItem('pt_one_csv', v?'1':'0'); }catch(e){} ptCsvBarSync(); }
+function ptBarCompany(v){
+  const c=COMPANIES.find(x=>x.n.toLowerCase()===String(v).trim().toLowerCase());
+  if(c) pickCo(c.n);
+}
+function ptBarDate(v){ document.getElementById('trip-date').value=v; updateAuto(); }
+function ptBarMsg(text,isErr){
+  document.querySelectorAll('.pt-csvbar .pt-cb-msg').forEach(m=>{m.textContent=text;m.className='pt-cb-msg'+(isErr?' err':'');});
+}
+function ptCsvBarSync(){
+  const bars=document.querySelectorAll('.pt-csvbar');
+  if(!bars.length) return;
+  const src=window.__ptBatchSrc||'';
+  const g={Pickup:0,Drop:0,Unknown:0};
+  (excelRows||[]).forEach(r=>{g[(r.dir==='Pickup'||r.dir==='Drop')?r.dir:'Unknown']++;});
+  const co=document.getElementById('company-input').value, ds=document.getElementById('trip-date').value;
+  bars.forEach(bar=>{
+    const on=(excelRows||[]).length&&src.indexOf(bar.dataset.src)===0;
+    bar.style.display=on?'flex':'none';
+    if(!on) return;
+    const parts=[]; if(g.Pickup) parts.push('Pickup '+g.Pickup); if(g.Drop) parts.push('Drop '+g.Drop); if(g.Unknown) parts.push(g.Unknown+' rows');
+    bar.querySelector('.pt-cb-sum').textContent='📦 '+parts.join(' + ')+' trips ready';
+    const ci=bar.querySelector('.pt-cb-co'); if(document.activeElement!==ci) ci.value=co;
+    const di=bar.querySelector('.pt-cb-date'); if(document.activeElement!==di) di.value=ds;
+    bar.querySelector('.pt-cb-dirwrap').style.display=g.Unknown?'flex':'none';
+    const both=!!(g.Pickup&&g.Drop), one=ptOneCsv();
+    bar.querySelector('.pt-cb-onewrap').style.display=both?'flex':'none';
+    bar.querySelector('.pt-cb-one').checked=one;
+    bar.querySelector('.pt-cb-dl').textContent=both?(one?'⬇ Download Pickup + Drop CSV (1 file)':'⬇ Download Pickup + Drop CSV (2 files)'):'⬇ Download CSV';
+  });
+}
+// Build the CSV for one direction without touching the visible Details tab
+function ptCsvForGroup(dir,rows,co,ds,tt){
+  const prev=currentMode, ti=document.getElementById('timing-input'), tiOld=ti.value;
+  const isPickup=dir==='Pickup';
+  currentMode=isPickup?'pickup':'drop';
+  try{
+    const timings=[...new Set(rows.map(r=>r.timing).filter(Boolean))];
+    if(timings.length) ti.value=timings[0];
+    const calc=getCalc();
+    const dataRows=buildDataRows(co,rows,isPickup,ds,tt,calc);
+    const tv=timings.length===1?timings[0]:(timings.length>1?'multi':(tiOld||''));
+    return {
+      csv:rowsToCSV(CSV_COLS,dataRows), tsv:rowsToTSV(CSV_COLS,dataRows),
+      filename:(isPickup?'pickup_':'drop_')+co.n.replace(/\s+/g,'_')+'_'+tv+'_'+ds+'.csv',
+      company:co.n, rows:dataRows.length, skipped:rows.length-dataRows.length,
+      mode:isPickup?'pickup':'drop', timing:tv, date:ds, dataRows
+    };
+  } finally { currentMode=prev; ti.value=tiOld; }
+}
+function ptCsvDownload(){
+  if(!excelRows.length){ ptBarMsg('⚠ Upload a file first.',true); return; }
+  const co=getCo();
+  if(!co){ ptBarMsg('⚠ Select a company first.',true); return; }
+  const ds=document.getElementById('trip-date').value;
+  if(!ds){ ptBarMsg('⚠ Select a date first.',true); return; }
+  const tt=document.getElementById('trip-type').value||5;
+  const groups={Pickup:[],Drop:[]}, unk=[];
+  excelRows.forEach(r=>{ if(r.dir==='Pickup'||r.dir==='Drop') groups[r.dir].push(r); else unk.push(r); });
+  if(unk.length){
+    const d=window.__ptUnkDir;
+    if(d!=='Pickup'&&d!=='Drop'){ ptBarMsg('⚠ Select the Type (Pickup or Drop) for this file.',true); return; }
+    groups[d]=groups[d].concat(unk);
+  }
+  const outs=[];
+  ['Pickup','Drop'].forEach(dir=>{ if(groups[dir].length){ const o=ptCsvForGroup(dir,groups[dir],co,ds,tt); if(o&&o.rows) outs.push(o); } });
+  if(!outs.length){ ptBarMsg('⚠ Nothing to download — check Date / Timing.',true); return; }
+  let list=outs;
+  if(outs.length>1&&ptOneCsv()){
+    const data=outs.flatMap(o=>o.dataRows), tims=[...new Set(outs.map(o=>o.timing).filter(Boolean))];
+    list=[{ csv:rowsToCSV(CSV_COLS,data), tsv:rowsToTSV(CSV_COLS,data),
+            filename:'pickup_drop_'+co.n.replace(/\s+/g,'_')+'_'+(tims.length?tims.join('-'):'multi')+'_'+ds+'.csv',
+            company:co.n, rows:data.length, skipped:outs.reduce((a,o)=>a+o.skipped,0), mode:'pickup+drop', timing:tims.join('-'), date:ds }];
+  }
+  list.forEach((o,i)=>setTimeout(()=>{
+    const blob=new Blob([o.csv],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob), a=document.createElement('a');
+    a.href=url; a.download=o.filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    if(typeof logTrip==='function'){ try{ logTrip(o,'download'); }catch(e){} }
+  }, i*700));
+  const skipped=list.reduce((a,o)=>a+o.skipped,0);
+  ptBarMsg('✅ '+list.map(o=>o.filename+' ('+o.rows+' rows)').join('  ·  ')+(skipped?'  ⚠ '+skipped+' rows skipped (no timing).':''), false);
 }
 let pasteModeContent  = {drop:'', pickup:''}; // separate paste per mode
 
@@ -1581,6 +1773,10 @@ function switchMode(mode) {
   // Restore paste content for this mode
   if(mode==='drop'||mode==='pickup'){
     document.getElementById('paste-box').value=pasteModeContent[mode]||'';
+  }
+  if((mode==='drop'||mode==='pickup')&&inputMode==='excel'&&new Set(excelRows.map(r=>r.dir).filter(Boolean)).size>1){
+    const t=(getActiveRows().find(r=>r.timing)||{}).timing;
+    if(t) document.getElementById('timing-input').value=t;
   }
   updateAuto();
 }
@@ -1847,7 +2043,12 @@ function calcForTiming(tv, ds, opts){
 }
 
 function getActiveRows(){
-  if(inputMode==='excel') return excelRows;
+  if(inputMode==='excel'){
+    // A batch that holds BOTH Pickup and Drop rows is split by the current tab (Pickup tab → Pickup rows, Drop tab → Drop rows)
+    const dirs=new Set(excelRows.map(r=>r.dir).filter(Boolean));
+    if(dirs.size>1){ const want=currentMode==='pickup'?'Pickup':'Drop'; return excelRows.filter(r=>!r.dir||r.dir===want); }
+    return excelRows;
+  }
   return parsePaste().map(r=>({...r,source:'paste'}));
 }
 
@@ -2081,6 +2282,7 @@ function showExcelErr(msg){
 }
 
 function parseAndPreview(){
+  try{ptCsvBarSync();}catch(e){}
   const rows=getActiveRows();
   if(inputMode==='paste') updateParseHint(rows);
   const co=getCo();
@@ -2166,7 +2368,7 @@ function buildCSV(){
   const csv=rowsToCSV(CSV_COLS, dataRows);
   const tsv=rowsToTSV(CSV_COLS, dataRows);
   const filename=(isPickup?'pickup_':'drop_')+co.n.replace(/\s+/g,'_')+'_'+tv+'_'+ds+'.csv';
-  return {csv, tsv, filename, company:co.n, rows:dataRows.length, mode:(isPickup?'pickup':'drop'), timing:tv, date:ds};
+  return {csv, tsv, filename, company:co.n, rows:dataRows.length, mode:(isPickup?'pickup':'drop'), timing:tv, date:ds, dataRows};
 }
 
 function showSuccess(text){
@@ -2214,8 +2416,88 @@ function fallbackCopy(text,cb){
   try{document.execCommand('copy');cb();}catch(e){alert('Copy failed — please use Download instead.');}
   document.body.removeChild(ta);
 }
+
+// ══════════════════════════════════════════════════════
+//  COMBINED CSV — Pickup rows + Drop rows in ONE file
+//  ➕ Add to Combined keeps the current tab's rows (with that tab's company / date / timing).
+//  ⬇ Download Combined adds the tab you are on automatically, then writes Pickup rows followed by Drop rows.
+// ══════════════════════════════════════════════════════
+const COMBO_KEY = 'ptrack_combo_basket';
+let comboItems = [];
+try { comboItems = JSON.parse(sessionStorage.getItem(COMBO_KEY) || '[]') || []; } catch(e) { comboItems = []; }
+function comboSave(){ try { sessionStorage.setItem(COMBO_KEY, JSON.stringify(comboItems)); } catch(e) {} }
+const comboKeyOf = o => [o.mode, o.company, o.date, o.timing].join('|');
+function comboUpsert(out){
+  const item = { mode:out.mode, company:out.company, date:out.date, timing:out.timing, rows:out.rows, data:out.dataRows };
+  const k = comboKeyOf(item), i = comboItems.findIndex(x => comboKeyOf(x) === k);
+  if (i >= 0) comboItems[i] = item; else comboItems.push(item);
+  comboSave(); comboRender();
+  return i >= 0 ? 'updated' : 'added';
+}
+// current tab → output object, or null (silently) when the tab has nothing usable
+function comboCurrent(){
+  const co = getCo(), calc = getCalc();
+  if (!co || !calc) return null;
+  if (!getActiveRows().length) return null;
+  const out = buildCSV();
+  return (out && out.rows) ? out : null;
+}
+function comboAdd(){
+  const out = buildCSV();               // shows the usual alerts if company / date / timing / rows are missing
+  if (!out || !out.rows) return;
+  const what = comboUpsert(out);
+  showSuccess(out.mode.toUpperCase() + ' ' + out.rows + ' rows ' + what + ' in Combined CSV — now open the other tab');
+}
+function comboRemove(i){ comboItems.splice(i, 1); comboSave(); comboRender(); }
+function comboClear(){ comboItems = []; comboSave(); comboRender(); }
+function comboRender(){
+  const bar = document.getElementById('combo-bar');
+  if (!bar) return;
+  if (!comboItems.length) { bar.style.display = 'none'; return; }
+  bar.style.display = 'block';
+  const total = comboItems.reduce((a, x) => a + x.rows, 0);
+  document.getElementById('combo-total').textContent = '· ' + total + ' rows';
+  document.getElementById('combo-chips').innerHTML = comboItems.map((x, i) =>
+    '<span class="combo-chip ' + x.mode + '">' + x.mode.toUpperCase() + ' · ' + (x.timing || '—') + ' · ' + x.rows + ' rows<b title="Remove" onclick="comboRemove(' + i + ')">×</b></span>').join('');
+}
+// all basket items (+ the tab you are on) → {csv, tsv, filename, ...}
+function comboBuild(){
+  const cur = comboCurrent();
+  if (cur) comboUpsert(cur);
+  if (!comboItems.length) { alert('Nothing to combine yet — enter locations and click "➕ Add to Combined".'); return null; }
+  const order = { pickup:0, drop:1 };
+  const items = comboItems.slice().sort((a, b) => (order[a.mode] - order[b.mode]));
+  const data = items.flatMap(x => x.data);
+  const uniq = arr => [...new Set(arr.filter(Boolean))];
+  const cos = uniq(items.map(x => x.company)), dates = uniq(items.map(x => x.date)), tims = uniq(items.map(x => x.timing));
+  const kinds = uniq(items.map(x => x.mode));
+  const filename = (kinds.length > 1 ? 'pickup_drop_' : kinds[0] + '_') + (cos.length === 1 ? cos[0].replace(/\s+/g, '_') : 'multi') + '_' +
+                   (tims.length ? tims.join('-') : 'multi') + '_' + (dates.length === 1 ? dates[0] : 'multi') + '.csv';
+  return { csv: rowsToCSV(CSV_COLS, data), tsv: rowsToTSV(CSV_COLS, data), filename,
+           company: cos.join(' + '), rows: data.length, mode: kinds.length > 1 ? 'pickup+drop' : kinds[0],
+           timing: tims.join('-'), date: dates.join(',') };
+}
+function comboDownload(){
+  const out = comboBuild();
+  if (!out) return;
+  const blob = new Blob([out.csv], { type:'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = out.filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showSuccess(out.rows + ' rows (' + comboItems.map(x => x.mode + ' ' + x.rows).join(' + ') + ') → ' + out.filename);
+  logTrip(out, 'download');
+}
+function comboCopy(){
+  const out = comboBuild();
+  if (!out) return;
+  const done = () => { showSuccess(out.rows + ' rows copied — paste directly into Excel/Sheet'); logTrip(out, 'copy'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(out.tsv).then(done).catch(() => fallbackCopy(out.tsv, done));
+  else fallbackCopy(out.tsv, done);
+}
+try { comboRender(); } catch(e) {}
+
 (function(){
   document.getElementById('trip-date').value=new Date().toISOString().slice(0,10);
+  ptInstallBars();
   document.getElementById('task-prefix').addEventListener('input',parseAndPreview);
   // Excel drag & drop
   const exDz=document.getElementById('excel-drop-zone');
@@ -2589,6 +2871,7 @@ function nbhHandleFile(files) {
         source:       'excel'
       }));
 
+      window.__ptBatchSrc = 'NBH Cleaner';
       if (excelRows.length) {
         const firstTiming = (excelRows.find(r => r.timing) || {}).timing;
         if (firstTiming) {
@@ -2752,7 +3035,7 @@ function nbhExport() {
   // Sheet layout: one block per "Planned Route", one row per employee, header row repeated per block.
   //   B = Plan (route) · D = Shift Time · F = Direction · R = Escort Name · T = Zone Name
   function avParse(raw){
-    let planCol = 1, shiftCol = 3, dirCol = 5, headerRow = -1;
+    let planCol = 1, shiftCol = 3, dirCol = 5, dateCol = 4, headerRow = -1;
     for (let i=0; i<Math.min(15, raw.length); i++) {
       const cells = (raw[i]||[]).map(c => String(c||'').toLowerCase().trim());
       const z = cells.indexOf('zone name');
@@ -2762,6 +3045,7 @@ function nbhExport() {
         if (f('plan')      !== -1) planCol  = f('plan');
         if (f('shift time')!== -1) shiftCol = f('shift time');
         if (f('direction') !== -1) dirCol   = f('direction');
+        if (f('shift date')!== -1) dateCol  = f('shift date');
         break;
       }
     }
@@ -2775,7 +3059,7 @@ function nbhExport() {
       if (!zone || /^zone name$/i.test(zone)) continue;
       let g = routes.get(plan);
       if (!g) {
-        g = { plan, shiftRaw: row[shiftCol], dir: String(row[dirCol]||'').trim(), zones: [], empCount: 0, escort: 0 };
+        g = { plan, shiftRaw: row[shiftCol], dateRaw: row[dateCol], dir: String(row[dirCol]||'').trim(), zones: [], empCount: 0, escort: 0 };
         routes.set(plan, g);
       }
       g.zones.push(zone);
@@ -2789,40 +3073,39 @@ function nbhExport() {
       // Pick-up → first employee's zone · Drop → last employee's zone
       const isDrop = /drop|logout/i.test(g.dir);
       const zone = isDrop ? g.zones[g.zones.length-1] : g.zones[0];
-      rows.push({ shift, plan: g.plan, zone, location: avLocation(zone), empCount: g.empCount, escort: g.escort });
+      rows.push({ shift, plan: g.plan, zone, location: avLocation(zone), empCount: g.empCount, escort: g.escort, dir: isDrop ? 'Drop' : 'Pickup', date: window.ptToISO(g.dateRaw) });
     });
     return { rows, headerRow, shiftCol };
   }
 
   window.__avParse = function(raw){ return avParse(raw); }; // used by Smart Upload (detect / timings / format guard)
   window.avalaraHandleFile = function(files){
-    if (!files || !files.length) return;
-    const file = files[0];
-    if (!file.name.match(/\.xls[x]?$/i)) { avErr('Only .xls / .xlsx files supported.'); return; }
+    files = Array.from(files || []);
+    if (!files.length) return;
+    if (files.some(f => !f.name.match(/\.xls[x]?$/i))) { avErr('Only .xls / .xlsx files supported.'); return; }
     avHideErr(); avWarn('');
-    document.getElementById('avalara-dzText').textContent = '⏳ Reading: ' + file.name;
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const wb = XLSX.read(e.target.result, { type:'array', raw:true, cellDates:true });
-        const sheet = wb.Sheets[wb.SheetNames[0]];
-        const raw = XLSX.utils.sheet_to_json(sheet, { header:1, raw:true, defval:null });
-        if (!raw.length) { avErr('File is empty'); return; }
+    const label = files.length === 1 ? files[0].name : files.length + ' files';
+    document.getElementById('avalara-dzText').textContent = '⏳ Reading: ' + label;
+    ptReadRaws(files, { cellDates:true }).then(list => {
+      const all = []; let noHeader = false;
+      list.forEach(({file, raw}) => {
+        if (!raw.length) return;
         const res = avParse(raw);
-        avRows = res.rows;
-        if (!avRows.length) {
-          avErr('No routes / zone names found (column T). Check the file format.');
-          document.getElementById('avalara-dzText').textContent = 'No data found — try again';
-          return;
-        }
-        if (res.headerRow === -1) avWarn('Header "Zone Name" not found — assumed default columns (Plan=B, Shift Time=D, Direction=F, Escort=R, Zone=T). Please verify the result.');
-        const total = avRows.reduce((a,r) => a + r.empCount, 0);
-        document.getElementById('avalara-dzText').textContent = '✅ ' + file.name + ' — ' + total + ' employees → ' + avRows.length + ' trips';
-        avRender();
-        avFeedDetails(file.name);
-      } catch(err) { avErr('Error reading file: ' + err.message); }
-    };
-    reader.readAsArrayBuffer(file);
+        if (res.headerRow === -1) noHeader = true;
+        res.rows.forEach(r => { r.file = file.name; all.push(r); });
+      });
+      avRows = all;
+      if (!avRows.length) {
+        avErr('No routes / zone names found (column T). Check the file format.');
+        document.getElementById('avalara-dzText').textContent = 'No data found — try again';
+        return;
+      }
+      if (noHeader) avWarn('Header "Zone Name" not found — assumed default columns (Plan=B, Shift Time=D, Direction=F, Escort=R, Zone=T). Please verify the result.');
+      const total = avRows.reduce((a,r) => a + r.empCount, 0);
+      document.getElementById('avalara-dzText').textContent = '✅ ' + label + ' — ' + total + ' employees → ' + avRows.length + ' trips';
+      avRender();
+      avFeedDetails(label);
+    }).catch(err => avErr('Error reading file: ' + err.message));
   };
 
   function avRender(){
@@ -2851,31 +3134,17 @@ function nbhExport() {
 
   // Feed into Details (Drop / Pickup upload sheet) — same as NBH cleaner
   function avFeedDetails(fileName){
-    excelRows = avRows.map(r => ({
-      tno: '', desc: '', locationName: r.location,
-      emp: r.empCount, escort: r.escort, timing: r.shift, flap: '', source: 'excel'
-    }));
-    const firstTiming = (excelRows.find(r => r.timing) || {}).timing;
-    if (firstTiming) {
-      const ti = document.getElementById('timing-input');
-      if (ti.value !== firstTiming) { ti.value = firstTiming; setTimeout(updateAuto, 0); }
-    }
-    setInputMode('excel');
-    const st = document.getElementById('excel-status');
-    st.textContent = '✅ ' + fileName + ' — ' + excelRows.length + ' rows ready';
-    st.className = 'ok';
-    const dz2 = document.getElementById('excel-drop-zone');
-    dz2.classList.add('loaded');
-    dz2.removeAttribute('for');
-    dz2.style.cursor = 'default';
-    document.getElementById('excel-dz-sub').textContent = '✅ ' + excelRows.length + ' rows ready — from Avalara Cleaner';
-    document.getElementById('excel-dz-main').textContent = '📋 ' + fileName;
-    document.querySelector('#excel-section .sec-label').textContent = 'Loaded from Avalara Cleaner';
-    const cm = document.getElementById('excel-col-map');
-    cm.innerHTML = '<strong>Avalara Column mapping:</strong><br>Zone (T) → Location → P_Order_id &amp; D_Order_id<br>Rows per route → Planned Employees<br>Escort (R) → Escort 1 / 0';
-    cm.classList.add('visible');
-    document.getElementById('excel-clear-btn').classList.add('visible');
-    parseAndPreview();
+    try{
+      ptFeedDetails(
+        avRows.map(r => ({
+          tno: '', desc: '', locationName: r.location,
+          emp: r.empCount, escort: r.escort, timing: r.shift, flap: '', source: 'excel', dir: r.dir
+        })),
+        fileName, 'Avalara Cleaner',
+        '<strong>Avalara Column mapping:</strong><br>Zone (T) → Location → P_Order_id &amp; D_Order_id<br>Rows per route → Planned Employees<br>Escort (R) → Escort 1 / 0',
+        { company: 'Avalara', date: (avRows.find(r => r.date) || {}).date }
+      );
+    }catch(fe){ console.warn('Avalara → Details feed', fe); }
   }
 
   window.avalaraExport = function(){
@@ -2948,7 +3217,8 @@ function nbhExport() {
           row: i, route, gender, loc,
           stop:   cells.indexOf('stoppage'),
           time:   cells.findIndex(c => /^stoppage time/.test(c)),
-          escort: cells.findIndex(c => /^escort/.test(c))
+          escort: cells.findIndex(c => /^escort/.test(c)),
+          date:   cells.findIndex(c => /^stoppage date/.test(c))
         };
       }
     }
@@ -2957,7 +3227,7 @@ function nbhExport() {
 
   function mxParse(raw){
     let h = mxFindHeader(raw), guessed = false;
-    if (!h) { guessed = true; h = { row:0, route:0, loc:3, stop:4, time:6, gender:11, escort:20 }; }
+    if (!h) { guessed = true; h = { row:0, route:0, loc:3, stop:4, time:6, gender:11, escort:20, date:5 }; }
     const blocks = []; let cur = null;
     for (let i = h.row + 1; i < raw.length; i++) {
       const row = raw[i];
@@ -2992,7 +3262,8 @@ function nbhExport() {
         dirSure: firstPnq || lastPnq,
         location: (loc(target) || stop(target)).replace(/\s{2,}/g,' '),
         empCount: emps.length, escort: esc,
-        pnqTime: mxHHMMraw(tMins), shift
+        pnqTime: mxHHMMraw(tMins), shift,
+        date: window.ptToISO(((pnqRow || first)||[])[h.date >= 0 ? h.date : -1])
       });
     });
     return { rows: out, guessed, header: h };
@@ -3001,41 +3272,40 @@ function nbhExport() {
   window.__mxParse = function(raw){ return mxParse(raw); };   // used by Smart Upload
 
   window.maerskHandleFile = function(files){
-    if (!files || !files.length) return;
-    const file = files[0];
-    if (!file.name.match(/\.xls[x]?$/i)) { mxErr('Only .xls / .xlsx files supported.'); return; }
+    files = Array.from(files || []);
+    if (!files.length) return;
+    if (files.some(f => !f.name.match(/\.xls[x]?$/i))) { mxErr('Only .xls / .xlsx files supported.'); return; }
     mxHideErr(); mxWarn('');
-    document.getElementById('maersk-dzText').textContent = '⏳ Reading: ' + file.name;
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const wb = XLSX.read(e.target.result, { type:'array', raw:true, cellDates:true });
-        const sheet = wb.Sheets[wb.SheetNames[0]];
-        const raw = XLSX.utils.sheet_to_json(sheet, { header:1, raw:true, defval:null });
-        if (!raw.length) { mxErr('File is empty'); return; }
+    const label = files.length === 1 ? files[0].name : files.length + ' files';
+    document.getElementById('maersk-dzText').textContent = '⏳ Reading: ' + label;
+    ptReadRaws(files, { cellDates:true }).then(list => {
+      const all = []; let guessed = false;
+      list.forEach(({file, raw}) => {
+        if (!raw.length) return;
         const res = mxParse(raw);
-        mxRows = res.rows;
-        if (!mxRows.length) {
-          mxErr('No routes with Male / Female employees found. Check the file format.');
-          document.getElementById('maersk-dzText').textContent = 'No data found — try again';
-          return;
-        }
-        const warns = [];
-        if (res.guessed) warns.push('Header row (Route No. / Locality / Gender) not found — default columns were assumed. Please verify the result.');
-        const unsure = mxRows.filter(r => !r.dirSure).length;
-        if (unsure) warns.push(unsure + ' routes have no PNQ at the start or end — treated as Pickup.');
-        const noTime = mxRows.filter(r => !r.shift).length;
-        if (noTime) warns.push(noTime + ' routes have no PNQ time — Shift is empty (Timing box will be used).');
-        mxWarn(warns.join('  '));
-        const total = mxRows.reduce((a,r) => a + r.empCount, 0);
-        const nP = mxRows.filter(r => r.dir === 'Pickup').length, nD = mxRows.length - nP;
-        const kind = nD === 0 ? 'Pickup' : nP === 0 ? 'Drop' : 'Pickup + Drop';
-        document.getElementById('maersk-dzText').textContent = '✅ ' + file.name + ' — ' + kind + ' — ' + total + ' employees → ' + mxRows.length + ' trips';
-        mxRender();
-        mxFeedDetails(file.name);
-      } catch(err) { mxErr('Error reading file: ' + err.message); }
-    };
-    reader.readAsArrayBuffer(file);
+        guessed = guessed || res.guessed;
+        res.rows.forEach(r => { r.file = file.name; all.push(r); });
+      });
+      mxRows = all;
+      if (!mxRows.length) {
+        mxErr('No routes with Male / Female employees found. Check the file format.');
+        document.getElementById('maersk-dzText').textContent = 'No data found — try again';
+        return;
+      }
+      const warns = [];
+      if (guessed) warns.push('Header row (Route No. / Locality / Gender) not found — default columns were assumed. Please verify the result.');
+      const unsure = mxRows.filter(r => !r.dirSure).length;
+      if (unsure) warns.push(unsure + ' routes have no PNQ at the start or end — treated as Pickup.');
+      const noTime = mxRows.filter(r => !r.shift).length;
+      if (noTime) warns.push(noTime + ' routes have no PNQ time — Shift is empty (Timing box will be used).');
+      mxWarn(warns.join('  '));
+      const total = mxRows.reduce((a,r) => a + r.empCount, 0);
+      const nP = mxRows.filter(r => r.dir === 'Pickup').length, nD = mxRows.length - nP;
+      const kind = nD === 0 ? 'Pickup' : nP === 0 ? 'Drop' : 'Pickup + Drop';
+      document.getElementById('maersk-dzText').textContent = '✅ ' + label + ' — ' + kind + ' — ' + total + ' employees → ' + mxRows.length + ' trips';
+      mxRender();
+      mxFeedDetails(label);
+    }).catch(err => mxErr('Error reading file: ' + err.message));
   };
 
   function mxRender(){
@@ -3071,10 +3341,11 @@ function nbhExport() {
         mxRows.map(r => ({
           // Pickup CSV reads Merchant Name from tno, Drop CSV reads it from flap → fill both (same as other cleaners: FLAP16)
           tno:r.flap.toUpperCase(), desc:'', locationName:r.location,
-          emp:r.empCount, escort:r.escort, timing:r.shift, flap:r.flap.toUpperCase(), source:'excel'
+          emp:r.empCount, escort:r.escort, timing:r.shift, flap:r.flap.toUpperCase(), source:'excel', dir:r.dir
         })),
         fileName, 'Maersk Cleaner',
-        '<strong>Maersk Column mapping:</strong><br>Locality → Location (Pickup: first · Drop: last, never PNQ)<br>Gender rows per Route → Planned Employees<br>Route No. → Flap (Merchant Name)<br>Escort (Y/N) → Escort 1 / 0<br>PNQ time → Timing'
+        '<strong>Maersk Column mapping:</strong><br>Locality → Location (Pickup: first · Drop: last, never PNQ)<br>Gender rows per Route → Planned Employees<br>Route No. → Flap (Merchant Name)<br>Escort (Y/N) → Escort 1 / 0<br>PNQ time → Timing',
+        { company: 'Maersk', date: (mxRows.find(r => r.date) || {}).date }
       );
     }catch(fe){ console.warn('Maersk → Details feed', fe); }
   }
@@ -3142,7 +3413,8 @@ function nbhExport() {
         return { row:i, trip, loc, gender,
           stop:   cells.indexOf('stoppage'),
           time:   cells.findIndex(c => /^stoppage time/.test(c)),
-          escort: cells.findIndex(c => /^escort/.test(c)) };
+          escort: cells.findIndex(c => /^escort/.test(c)),
+          date:   cells.findIndex(c => /^stoppage date/.test(c)) };
       }
     }
     return null;
@@ -3150,7 +3422,7 @@ function nbhExport() {
 
   function mgParse(raw){
     let h = mgFindHeader(raw), guessed = false;
-    if (!h) { guessed = true; h = { row:0, trip:2, loc:3, stop:4, time:6, gender:11, escort:20 }; }
+    if (!h) { guessed = true; h = { row:0, trip:2, loc:3, stop:4, time:6, gender:11, escort:20, date:5 }; }
     const blocks = []; let cur = null;
     for (let i = h.row + 1; i < raw.length; i++) {
       const row = raw[i];
@@ -3178,7 +3450,8 @@ function nbhExport() {
       out.push({
         tripId: b.id, dir: isDrop ? 'Drop' : 'Pickup', dirSure: firstOff || lastOff,
         location: mgLocation(loc(target) || stop(target)),
-        empCount: emps.length, escort: esc, shift
+        empCount: emps.length, escort: esc, shift,
+        date: window.ptToISO(((offRow || first)||[])[h.date >= 0 ? h.date : -1])
       });
     });
     return { rows: out, guessed, noOffice };
@@ -3186,42 +3459,41 @@ function nbhExport() {
   window.__mgParse = function(raw){ return mgParse(raw); };   // used by Smart Upload
 
   window.magnaHandleFile = function(files){
-    if (!files || !files.length) return;
-    const file = files[0];
-    if (!file.name.match(/\.xls[x]?$/i)) { mgErr('Only .xls / .xlsx files supported.'); return; }
+    files = Array.from(files || []);
+    if (!files.length) return;
+    if (files.some(f => !f.name.match(/\.xls[x]?$/i))) { mgErr('Only .xls / .xlsx files supported.'); return; }
     mgHideErr(); mgWarn('');
-    document.getElementById('magna-dzText').textContent = '⏳ Reading: ' + file.name;
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const wb = XLSX.read(e.target.result, { type:'array', raw:true, cellDates:true });
-        const sheet = wb.Sheets[wb.SheetNames[0]];
-        const raw = XLSX.utils.sheet_to_json(sheet, { header:1, raw:true, defval:null });
-        if (!raw.length) { mgErr('File is empty'); return; }
+    const label = files.length === 1 ? files[0].name : files.length + ' files';
+    document.getElementById('magna-dzText').textContent = '⏳ Reading: ' + label;
+    ptReadRaws(files, { cellDates:true }).then(list => {
+      const all = []; let guessed = false, noOffice = 0;
+      list.forEach(({file, raw}) => {
+        if (!raw.length) return;
         const res = mgParse(raw);
-        mgRows = res.rows;
-        if (!mgRows.length) {
-          mgErr('No trips with Male / Female employees found. Check the file format.');
-          document.getElementById('magna-dzText').textContent = 'No data found — try again';
-          return;
-        }
-        const warns = [];
-        if (res.guessed) warns.push('Header row (Trip ID / Locality / Gender) not found — default columns were assumed. Please verify the result.');
-        if (res.noOffice) warns.push(res.noOffice + ' trips have no "Magna Automotive" row at the start or end — treated as Pickup.');
-        const noTime = mgRows.filter(r => !r.shift).length;
-        if (noTime) warns.push(noTime + ' trips have no Magna Automotive time — Shift is empty (Timing box will be used).');
-        const noLoc = mgRows.filter(r => !r.location).length;
-        if (noLoc) warns.push(noLoc + ' trips have an empty Location.');
-        mgWarn(warns.join('  '));
-        const total = mgRows.reduce((a,r) => a + r.empCount, 0);
-        const nP = mgRows.filter(r => r.dir === 'Pickup').length, nD = mgRows.length - nP;
-        const kind = nD === 0 ? 'Pickup' : nP === 0 ? 'Drop' : 'Pickup + Drop';
-        document.getElementById('magna-dzText').textContent = '✅ ' + file.name + ' — ' + kind + ' — ' + total + ' employees → ' + mgRows.length + ' trips';
-        mgRender();
-        mgFeedDetails(file.name);
-      } catch(err) { mgErr('Error reading file: ' + err.message); }
-    };
-    reader.readAsArrayBuffer(file);
+        guessed = guessed || res.guessed; noOffice += res.noOffice;
+        res.rows.forEach(r => { r.file = file.name; all.push(r); });
+      });
+      mgRows = all;
+      if (!mgRows.length) {
+        mgErr('No trips with Male / Female employees found. Check the file format.');
+        document.getElementById('magna-dzText').textContent = 'No data found — try again';
+        return;
+      }
+      const warns = [];
+      if (guessed) warns.push('Header row (Trip ID / Locality / Gender) not found — default columns were assumed. Please verify the result.');
+      if (noOffice) warns.push(noOffice + ' trips have no "Magna Automotive" row at the start or end — treated as Pickup.');
+      const noTime = mgRows.filter(r => !r.shift).length;
+      if (noTime) warns.push(noTime + ' trips have no Magna Automotive time — Shift is empty (Timing box will be used).');
+      const noLoc = mgRows.filter(r => !r.location).length;
+      if (noLoc) warns.push(noLoc + ' trips have an empty Location.');
+      mgWarn(warns.join('  '));
+      const total = mgRows.reduce((a,r) => a + r.empCount, 0);
+      const nP = mgRows.filter(r => r.dir === 'Pickup').length, nD = mgRows.length - nP;
+      const kind = nD === 0 ? 'Pickup' : nP === 0 ? 'Drop' : 'Pickup + Drop';
+      document.getElementById('magna-dzText').textContent = '✅ ' + label + ' — ' + kind + ' — ' + total + ' employees → ' + mgRows.length + ' trips';
+      mgRender();
+      mgFeedDetails(label);
+    }).catch(err => mgErr('Error reading file: ' + err.message));
   };
 
   function mgRender(){
@@ -3254,10 +3526,11 @@ function nbhExport() {
       ptFeedDetails(
         mgRows.map(r => ({
           tno:'', desc:'', locationName:r.location,
-          emp:r.empCount, escort:r.escort, timing:r.shift, flap:'', source:'excel'
+          emp:r.empCount, escort:r.escort, timing:r.shift, flap:'', source:'excel', dir:r.dir
         })),
         fileName, 'Magna Cleaner',
-        '<strong>Magna Column mapping:</strong><br>Locality (D) → Location (Pickup: first · Drop: last, never Magna Automotive)<br>Gender (L) rows per Trip ID → Planned Employees<br>Magna Automotive time → Timing<br>Escort (Y/N) → Escort 1 / 0'
+        '<strong>Magna Column mapping:</strong><br>Locality (D) → Location (Pickup: first · Drop: last, never Magna Automotive)<br>Gender (L) rows per Trip ID → Planned Employees<br>Magna Automotive time → Timing<br>Escort (Y/N) → Escort 1 / 0',
+        { company: 'Magna Automotive', date: (mgRows.find(r => r.date) || {}).date }
       );
     }catch(fe){ console.warn('Magna → Details feed', fe); }
   }
@@ -3321,7 +3594,7 @@ function nbhExport() {
       const dm = gCell(row[3]).match(/^(Login|Logout)\s+(\d{1,2}):(\d{2})/i);
       if (pm && dm) {
         cur = { pid: pm[1], dir: /^login/i.test(dm[1]) ? 'Pickup' : 'Drop',
-                shift: dm[2].padStart(2,'0') + dm[3], jRaw: row[9], emps: [] };
+                shift: dm[2].padStart(2,'0') + dm[3], jRaw: row[9], date: window.ptToISO(row[0]), emps: [] };
         trips.push(cur);
         return;
       }
@@ -3344,7 +3617,7 @@ function nbhExport() {
       if (target && night && !/^(fe)?male$/i.test(gender)) oddGender++;   // gender only matters on night shifts
       rows.push({
         dir: t.dir, shift: t.shift, pid: t.pid, flap: 'FLAP' + t.pid,
-        location, empCount, escort: (night && /^female$/i.test(gender)) ? 1 : 0, gender, night
+        location, empCount, escort: (night && /^female$/i.test(gender)) ? 1 : 0, gender, night, date: t.date
       });
     });
     rows.sort((a,b) => a.shift.localeCompare(b.shift) || (parseInt(a.pid,10) - parseInt(b.pid,10)));
@@ -3353,38 +3626,39 @@ function nbhExport() {
   window.__galParse = function(raw){ return galParse(raw); };   // used by Smart Upload
 
   window.gallagherHandleFile = function(files){
-    if (!files || !files.length) return;
-    const file = files[0];
-    if (!file.name.match(/\.xls[x]?$/i)) { gErr('Only .xls / .xlsx files supported.'); return; }
+    files = Array.from(files || []);
+    if (!files.length) return;
+    if (files.some(f => !f.name.match(/\.xls[x]?$/i))) { gErr('Only .xls / .xlsx files supported.'); return; }
     gHideErr(); gWarn('');
-    document.getElementById('gallagher-dzText').textContent = '⏳ Reading: ' + file.name;
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const wb = XLSX.read(e.target.result, { type:'array', raw:true });
-        const sheet = wb.Sheets[wb.SheetNames[0]];
-        const raw = XLSX.utils.sheet_to_json(sheet, { header:1, raw:true, defval:null });
+    const label = files.length === 1 ? files[0].name : files.length + ' files';
+    document.getElementById('gallagher-dzText').textContent = '⏳ Reading: ' + label;
+    ptReadRaws(files, {}).then(list => {
+      const all = []; const sum = { mismatch:0, noLoc:0, oddGender:0 };
+      list.forEach(({file, raw}) => {
         const res = galParse(raw);
-        galRows = res.rows;
-        if (!galRows.length) {
-          gErr('No "Physical ID" + Login / Logout trips found. Check the file format.');
-          document.getElementById('gallagher-dzText').textContent = 'No data found — try again';
-          return;
-        }
-        const warns = [];
-        if (res.mismatch) warns.push(res.mismatch + ' trips have a Col J count different from the number of employee rows — Col J was used.');
-        if (res.noLoc) warns.push(res.noLoc + ' trips have an empty Location (Col H).');
-        if (res.oddGender) warns.push(res.oddGender + ' night-shift trips have a Gender that is not Male / Female — Escort set to 0.');
-        gWarn(warns.join('  '));
-        const total = galRows.reduce((a,r) => a + r.empCount, 0);
-        const nP = galRows.filter(r => r.dir === 'Pickup').length, nD = galRows.length - nP;
-        const kind = nD === 0 ? 'Pickup' : nP === 0 ? 'Drop' : 'Pickup + Drop';
-        document.getElementById('gallagher-dzText').textContent = '✅ ' + file.name + ' — ' + kind + ' — ' + total + ' employees → ' + galRows.length + ' trips';
-        gRender();
-        gFeedDetails(file.name);
-      } catch(err) { gErr('Error reading file: ' + err.message); }
-    };
-    reader.readAsArrayBuffer(file);
+        sum.mismatch += res.mismatch; sum.noLoc += res.noLoc; sum.oddGender += res.oddGender;
+        res.rows.forEach(r => { r.file = file.name; all.push(r); });
+      });
+      // Pickup first, then Drop; inside each: by shift, then Flap number
+      all.sort((a,b) => (a.dir === b.dir ? 0 : a.dir === 'Pickup' ? -1 : 1) || a.shift.localeCompare(b.shift) || (parseInt(a.pid,10) - parseInt(b.pid,10)));
+      galRows = all;
+      if (!galRows.length) {
+        gErr('No "Physical ID" + Login / Logout trips found. Check the file format.');
+        document.getElementById('gallagher-dzText').textContent = 'No data found — try again';
+        return;
+      }
+      const warns = [];
+      if (sum.mismatch) warns.push(sum.mismatch + ' trips have a Col J count different from the number of employee rows — Col J was used.');
+      if (sum.noLoc) warns.push(sum.noLoc + ' trips have an empty Location (Col H).');
+      if (sum.oddGender) warns.push(sum.oddGender + ' night-shift trips have a Gender that is not Male / Female — Escort set to 0.');
+      gWarn(warns.join('  '));
+      const total = galRows.reduce((a,r) => a + r.empCount, 0);
+      const nP = galRows.filter(r => r.dir === 'Pickup').length, nD = galRows.length - nP;
+      const kind = nD === 0 ? 'Pickup' : nP === 0 ? 'Drop' : 'Pickup + Drop';
+      document.getElementById('gallagher-dzText').textContent = '✅ ' + label + ' — ' + kind + ' — ' + total + ' employees → ' + galRows.length + ' trips';
+      gRender();
+      gFeedDetails(label);
+    }).catch(err => gErr('Error reading file: ' + err.message));
   };
 
   function gRender(){
@@ -3420,10 +3694,11 @@ function nbhExport() {
       ptFeedDetails(
         galRows.map(r => ({
           tno:r.flap, desc:'', locationName:r.location,
-          emp:r.empCount, escort:r.escort, timing:r.shift, flap:r.flap, source:'excel'
+          emp:r.empCount, escort:r.escort, timing:r.shift, flap:r.flap, source:'excel', dir:r.dir
         })),
         fileName, 'Gallagher Cleaner',
-        '<strong>Gallagher Column mapping:</strong><br>Physical ID (C) → Flap (Merchant Name)<br>Login / Logout time (D) → Timing<br>Location (H) → Pickup: first · Drop: last<br>Count (J) → Planned Employees<br>Gender → Escort (night shifts 20:00–06:00 only: Female 1 / Male 0 · day shifts 0)'
+        '<strong>Gallagher Column mapping:</strong><br>Physical ID (C) → Flap (Merchant Name)<br>Login / Logout time (D) → Timing<br>Location (H) → Pickup: first · Drop: last<br>Count (J) → Planned Employees<br>Gender → Escort (night shifts 20:00–06:00 only: Female 1 / Male 0 · day shifts 0)',
+        { company: 'Gallagher', date: (galRows.find(r => r.date) || {}).date }
       );
     }catch(fe){ console.warn('Gallagher → Details feed', fe); }
   }
@@ -3636,7 +3911,7 @@ function nbhExport() {
     if (!rows.length) return;
     try {
       ptFeedDetails(
-        rows.map(r => ({ tno:'', desc:'', locationName:r.location, emp:r.empCount, escort:r.guard, timing:r.shift, flap:'', source:'excel' })),
+        rows.map(r => ({ tno:'', desc:'', locationName:r.location, emp:r.empCount, escort:r.guard, timing:r.shift, flap:'', source:'excel', dir:mpView })),
         mpFile, 'Mphasis Cleaner (' + mpView + ')',
         '<strong>Mphasis Column mapping:</strong><br>Shift Time (D) → Timing<br>Location (I) → cleaned (no Zone prefix, no commas)<br>Employee Count (E) → Planned Employees<br>Guard (R) → Escort (DEPLOY SECURITY GUARD 1 / blank 0)<br>Only ' + mpView + ' trips were sent'
       );
@@ -3714,7 +3989,7 @@ function nbhExport() {
           ptFeedDetails(
             tiaaRows.map(r => ({
               tno:'', desc:'', locationName:r.location,
-              emp:r.empCount, escort:r.guard, timing:r.shift, flap:'', source:'excel'
+              emp:r.empCount, escort:r.guard, timing:r.shift, flap:'', source:'excel', dir:(r.type==='Login'?'Pickup':'Drop')
             })),
             file.name, 'TIAA Cleaner',
             '<strong>TIAA Column mapping:</strong><br>Shift → Timing<br>Location → P_Order_id &amp; D_Order_id<br>Emp Count → Planned Employees<br>Guard → Escort'
@@ -4584,10 +4859,10 @@ const TYPES={
   mail:     {label:'Mail Cleaner (SP / MP)',     mode:'cleaner',  fn:'mcHandleFiles',        multi:true},
   nbh:      {label:'NT / Barclays / HPE',        mode:'nbh',      fn:'nbhHandleFile'},
   tiaa:     {label:'TIAA / Allscripts / Altera', mode:'tiaa',     fn:'tiaaHandleFile'},
-  avalara:  {label:'Avalara',                    mode:'avalara',  fn:'avalaraHandleFile'},
-  gallagher:{label:'Gallagher',                  mode:'gallagher',fn:'gallagherHandleFile'},
-  maersk:   {label:'Maersk',                     mode:'maersk',   fn:'maerskHandleFile'},
-  magna:    {label:'Magna',                      mode:'magna',    fn:'magnaHandleFile'},
+  avalara:  {label:'Avalara',                    mode:'avalara',  fn:'avalaraHandleFile',multi:true},
+  gallagher:{label:'Gallagher',                  mode:'gallagher',fn:'gallagherHandleFile',multi:true},
+  maersk:   {label:'Maersk',                     mode:'maersk',   fn:'maerskHandleFile',multi:true},
+  magna:    {label:'Magna',                      mode:'magna',    fn:'magnaHandleFile',multi:true},
   mphasis:  {label:'Mphasis (CC4 / EON)',        mode:'mphasis',  fn:'mphasisHandleFile'}
 };
 const ORIG={};
@@ -5305,8 +5580,9 @@ window.smartHandleFiles=async function(fileList){
   const known=items.filter(x=>x.type);
   if(known.length===items.length&&new Set(known.map(x=>x.type)).size===1){
     const k=known[0].type;
-    // auto-open only when there is one (or zero) timing; with several timings the user chooses first
-    if(groupTimes(k).size<=1) window.ptSmartOpen(k,items.map((_,i)=>i));
+    // auto-open when there is one (or zero) timing; a file with several shifts shows the timing chooser first
+    // also auto-open a Pickup file + Drop file (each has one timing) — no chooser needed
+    if(groupTimes(k).size<=1||items.every(it=>it.times&&it.times.size<=1)) window.ptSmartOpen(k,items.map((_,i)=>i));
   }
 };
 function renderSmart(){
