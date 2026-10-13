@@ -1461,6 +1461,7 @@
       <div class="mc-sa">&#8594; CSV Task Description*</div>
     </div>
   </div>
+  <div style="margin-bottom:12px;font-size:12px;color:#475569;">Drop shift (optional): <input id="gallagher-dropShift" maxlength="4" placeholder="e.g. 1830" oninput="gallagherShiftOverride()" style="width:80px;padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:var(--mono);"> <span style="color:#94a3b8">— empty = auto (Logout time from sheet)</span> &nbsp;&nbsp; Pickup shift (optional): <input id="gallagher-pickShift" maxlength="4" placeholder="e.g. 1600" oninput="gallagherShiftOverride()" style="width:80px;padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px;font-family:var(--mono);"> <span style="color:#94a3b8">— or edit Shift directly in the table</span></div>
   <button id="gallagher-exportBtn" onclick="gallagherExport()">&#11015; Export .xlsx</button>
   <div id="gallagher-errBar"></div>
   <div id="gallagher-warnBar"></div>
@@ -2474,7 +2475,9 @@ function getCalc(){
     let ph,pm;
     if(pickMin<=0){ph=0;pm=1;}else{ph=Math.floor(pickMin/60);pm=pickMin%60;}
     const ll=1; // Pickup → always 1
-    return{pickup:fmtDT(d,ph,pm),delivery:fmtDT(d,th,tm),shift,ll,tv};
+    // 0000 timing → Delivery 00:01 (not 00:00)
+    const z0=(th===0&&tm===0);
+    return{pickup:fmtDT(d,ph,pm),delivery:fmtDT(d,th,z0?1:tm),shift,ll,tv};
   }else{
     // DROP: Pickup = timing, Delivery = timing + 1:30 hr
     // If delivery crosses midnight → keep same day: 22:xx pickup → 23:30, 23:xx pickup → 23:45
@@ -2483,7 +2486,8 @@ function getCalc(){
     if(delMin>=1440){dn=d;if(th===22){dh=23;dm=30;}else{dh=23;dm=45;}}
     else{dh=Math.floor(delMin/60);dm=delMin%60;dn=d;}
     const ll=2; // Drop → always 2
-    return{pickup:fmtDT(d,th,tm),delivery:fmtDT(dn,dh,dm),shift,ll,tv};
+    // 0000 timing → Pickup 00:01 (not 00:00), Delivery stays 01:30
+    return{pickup:fmtDT(d,th,(th===0&&tm===0)?1:tm),delivery:fmtDT(dn,dh,dm),shift,ll,tv};
   }
 }
 function getCo(){const v=(document.getElementById('company-val').value||'').trim();return COMPANIES.find(c=>c.n.toLowerCase()===v.toLowerCase())||null;}
@@ -2639,7 +2643,9 @@ function calcForTiming(tv, ds, opts){
     let ph,pm;
     if(pickMin<=0){ph=0;pm=1;}else{ph=Math.floor(pickMin/60);pm=pickMin%60;}
     const ll=1; // Pickup → always 1
-    return{pickup:fmtDT(d,ph,pm),delivery:fmtDT(d,th,tm),shift,ll,tv};
+    // 0000 timing → Delivery 00:01 (not 00:00)
+    const z0=(th===0&&tm===0);
+    return{pickup:fmtDT(d,ph,pm),delivery:fmtDT(d,th,z0?1:tm),shift,ll,tv};
   }else{
     // DROP: Pickup = timing, Delivery = timing + 1:30 hr
     // SPECIAL (Gallagher Summary upload ONLY, not used anywhere else): 2345 → Pickup 00:01 / Delivery 01:30, next day
@@ -2654,7 +2660,8 @@ function calcForTiming(tv, ds, opts){
     if(delMin>=1440){dn=d;if(th===22){dh=23;dm=30;}else{dh=23;dm=45;}}
     else{dh=Math.floor(delMin/60);dm=delMin%60;dn=d;}
     const ll=2; // Drop → always 2
-    return{pickup:fmtDT(d,th,tm),delivery:fmtDT(dn,dh,dm),shift,ll,tv};
+    // 0000 timing → Pickup 00:01 (not 00:00), Delivery stays 01:30
+    return{pickup:fmtDT(d,th,(th===0&&tm===0)?1:tm),delivery:fmtDT(dn,dh,dm),shift,ll,tv};
   }
 }
 
@@ -4861,7 +4868,7 @@ function nbhExport() {
 //             Day shifts → Escort always 0
 // ══════════════════════════════════════════════════════
 (function(){
-  let galRows = [];
+  let galRows = [], galLabel = '';
 
   // Night-shift window (24h HH:MM). Escort is applied only when the shift time falls in this window.
   // Change these two values if the night window changes.
@@ -4920,7 +4927,7 @@ function nbhExport() {
       if (target && night && !/^(fe)?male$/i.test(gender)) oddGender++;   // gender only matters on night shifts
       if (!t.tripId) noTrip++;
       rows.push({
-        dir: t.dir, shift: t.shift, pid: t.pid, flap: 'FLAP' + t.pid, tripId: t.tripId,
+        dir: t.dir, shift: t.shift, shiftAuto: t.shift, pid: t.pid, flap: 'FLAP' + t.pid, tripId: t.tripId,
         location, empCount, escort: (night && /^female$/i.test(gender)) ? 1 : 0, gender, night, date: t.date
       });
     });
@@ -4961,6 +4968,8 @@ function nbhExport() {
       const nP = galRows.filter(r => r.dir === 'Pickup').length, nD = galRows.length - nP;
       const kind = nD === 0 ? 'Pickup' : nP === 0 ? 'Drop' : 'Pickup + Drop';
       document.getElementById('gallagher-dzText').textContent = '✅ ' + label + ' — ' + kind + ' — ' + total + ' employees → ' + galRows.length + ' trips';
+      galLabel = label;
+      gApplyShift();
       gRender();
       gFeedDetails(label);
     }).catch(err => gErr('Error reading file: ' + err.message));
@@ -4978,12 +4987,12 @@ function nbhExport() {
       ' &nbsp;·&nbsp; <span style="color:#0369a1;font-weight:600">' + total + ' employees</span>' +
       ' &nbsp;·&nbsp; <span style="color:#dc2626;font-weight:600">' + esc + ' with Escort</span>' +
       ' &nbsp;·&nbsp; <span style="color:#64748b">Shifts: ' + shifts.join(', ') + '</span>';
-    document.getElementById('gallagher-tbody').innerHTML = galRows.map(r => {
+    document.getElementById('gallagher-tbody').innerHTML = galRows.map((r, ri) => {
       const dcol = r.dir === 'Drop' ? '#b45309' : '#0f766e';
       const escStyle = r.escort ? 'color:#dc2626;font-weight:700' : 'color:#94a3b8;font-weight:400';
       return '<tr>' +
         '<td style="color:' + dcol + ';font-weight:700">' + r.dir + '</td>' +
-        '<td style="color:#0369a1;font-weight:700">' + r.shift + '</td>' +
+        '<td><input value="' + (r.shift || '') + '" maxlength="4" onchange="gallagherRowShift(' + ri + ',this)" style="width:64px;padding:3px 6px;border:1px solid #cbd5e1;border-radius:5px;font-family:var(--mono);font-weight:700;color:#0369a1"></td>' +
         '<td style="color:#7c3aed;font-weight:600">' + r.flap + '</td>' +
         '<td style="color:#16a34a;font-weight:600">' + (r.location || '—') + '</td>' +
         '<td class="c" style="color:#334155;font-weight:700">' + r.empCount + '</td>' +
@@ -5007,6 +5016,35 @@ function nbhExport() {
       );
     }catch(fe){ console.warn('Gallagher → Details feed', fe); }
   }
+
+  // Shift override: Drop / Pickup boxes (empty = auto from sheet). Escort is re-evaluated for the final shift (night 20:00–06:00 + Female).
+  const gOkT = v => /^([01]\d|2[0-3])[0-5]\d$/.test(v);
+  function gApplyShift(){
+    const de = document.getElementById('gallagher-dropShift'), pe = document.getElementById('gallagher-pickShift');
+    const dv = de ? (de.value || '').trim() : '', pv = pe ? (pe.value || '').trim() : '';
+    galRows.forEach(r => {
+      const v = r.dir === 'Drop' ? dv : pv;
+      r.shift = gOkT(v) ? v : r.shiftAuto;
+      gRecalc(r);
+    });
+  }
+  function gRecalc(r){
+    r.night = galIsNight(r.shift);
+    r.escort = (r.night && /^female$/i.test(r.gender)) ? 1 : 0;
+  }
+  window.gallagherRowShift = function(i, el){
+    const v = String(el.value || '').trim();
+    if (!gOkT(v)) { el.style.borderColor = '#dc2626'; return; }
+    el.style.borderColor = '#cbd5e1';
+    galRows[i].shift = v;
+    gRecalc(galRows[i]);
+    gRender();
+    gFeedDetails(galLabel);
+  };
+  window.gallagherShiftOverride = function(){
+    if (!galRows.length) return;
+    gApplyShift(); gRender(); gFeedDetails(galLabel);
+  };
 
   window.gallagherExport = function(){
     if (!galRows.length) return;
@@ -6790,13 +6828,19 @@ function detGal(wb){
 /* ---------- WNS (alltrips layout, stops named "... PM12 - PU / DP") ---------- */
 const WNS_STOP_RE=/\bPM\s*\d+\s*-\s*(PU|DP)\s*$/i;
 function wnsSig(wb){
-  const raw=rowsOf(wb,wb.SheetNames[0],true).slice(0,120);
-  let hdr=false,n=0;
+  // WNS alltrips sheet = Route No. / Locality / Gender header AND either
+  //  (a) stops named "PMxx - PU/DP"  (older WNS layout), or
+  //  (b) non-employee office / depot rows in Locality: "MGRPATTA-SEZ" (Magarpatta office) or "PUNE AV" (depot) — WNS Magarpatta alltrips with plain locality names.
+  // Maersk uses "PNQ" rows instead, so it is not affected (Maersk files still go to Maersk).
+  const raw=rowsOf(wb,wb.SheetNames[0],true).slice(0,200);
+  let hdr=false,n=0,gi=-1,li=3;
   raw.forEach((row,i)=>{
     if(!row) return;
     const r=row.map(norm);
-    if(i<15&&r.some(c=>/^route/.test(c))&&r.includes('gender')&&r.includes('locality')) hdr=true;
+    if(i<15&&r.some(c=>/^route/.test(c))&&r.includes('gender')&&r.includes('locality')){hdr=true;gi=r.indexOf('gender');li=r.indexOf('locality');return;}
+    const loc=ss(row[li]).trim();
     if(WNS_STOP_RE.test(ss(row[3]).trim())) n++;
+    else if(hdr&&gi>=0&&!ss(row[gi]).trim()&&/^(mgrpatta|magarpatta)[\s-]*(sez|t\d+)?$|^pune av$/i.test(loc)) n++;
   });
   return hdr&&n>0;
 }
